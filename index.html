@@ -4267,6 +4267,11 @@ function renderSettings(){
     }).join('')+'</div>';
     h+=`<div class="meta">Al activar, desactivar o borrar un parche la página se recarga para
       reconstruir los datos.</div></div>`;
+    h+=`<div class="gsec"><h2>Versión</h2>
+      <div class="meta">Si acabas de subir un archivo nuevo y aquí sigue el número viejo,
+      la copia guardada aún no se ha renovado: cierra la app y vuelve a abrirla.</div>
+      <div class="hfields"><span class="hcalc">Compilación <b>${APPBUILD}</b></span>
+        <button class="minibtn" id="appreload">Buscar versión nueva</button></div></div>`;
     if('serviceWorker' in navigator && location.protocol.startsWith('http')){
       pedirSprites('sprites:contar');
       h+=`<div class="gsec"><h2>Sprites guardados</h2>
@@ -4896,6 +4901,7 @@ setInterval(()=>{
 // Cada pantalla deja una entrada en el historial, así que "atrás" retrocede
 // dentro de la app en vez de cerrarla. Solo cuenta lo que es navegar de verdad:
 // marcar un Pokémon o cambiar un filtro no crea entradas.
+const APPBUILD='2026-08-29 · 12';
 let navSig=null;
 function navState(){
   return {v:opts.view, dex:selDex, pv:pokeView, ds:dexSrc, dsh:dexShiny?1:0,
@@ -5197,6 +5203,19 @@ app.addEventListener('click',e=>{
   if(hdl){ const id=hdl.dataset.hdel;
     if(confirm('¿Borrar esta caza del registro?')){
       hunts=hunts.filter(x=>x.id!==id); saveHunts(); render(); }
+    return; }
+  if(e.target.id==='appreload'){
+    (async()=>{
+      try{
+        if('serviceWorker' in navigator){
+          const rs=await navigator.serviceWorker.getRegistrations();
+          await Promise.all(rs.map(r=>r.update()));
+        }
+        await caches.delete('pokedex-app-v1');
+        await caches.delete('pokedex-app-v2');
+      }catch(err){}
+      location.reload();
+    })();
     return; }
   if(e.target.id==='sprclear'){
     if(confirm('¿Vaciar los sprites guardados? Se volverán a descargar según navegues.')){

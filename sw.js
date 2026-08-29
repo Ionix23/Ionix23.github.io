@@ -3,7 +3,7 @@
    - La app (HTML, manifiesto, iconos): primero la red, con la copia como respaldo,
      para que al subir una versión nueva la recibas sin trucos raros.
    - Los sprites: primero la copia. Nunca cambian, así que no hay que revalidar. */
-const V     = 'v1';
+const V     = 'v2';
 const APP   = 'pokedex-app-' + V;
 const SPR   = 'pokedex-sprites-' + V;
 const SPRITE_HOSTS = ['raw.githubusercontent.com','img.pokemondb.net'];
@@ -56,7 +56,10 @@ self.addEventListener('fetch', e => {
     e.respondWith((async () => {
       const cache = await caches.open(APP);
       try {
-        const res = await fetch(req);
+        // 'no-store' salta la caché del navegador: GitHub Pages manda guardar
+        // el HTML 10 minutos y sin esto una versión nueva tarda en aparecer
+        const res = await fetch(req.url, { cache: 'no-store', credentials: 'same-origin' })
+                          .catch(() => fetch(req));
         if (res && res.ok) guardar(cache, req, res.clone());
         return res;
       } catch (err) {
