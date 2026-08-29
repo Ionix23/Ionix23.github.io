@@ -2800,6 +2800,32 @@ header.hunting .headcol{flex:1 1 100%;max-width:none}
 /* el chip de la caza seleccionada heredaba el blanco de los botones de cabecera */
 .hsw.on, .hsw.on .hswn{color:#0d2331}
 .hsw.on .hswc{color:#1d5a7d;background:rgba(43,108,146,.16)}
+
+/* sección unificada de probabilidad y ritmo */
+.hgoals{margin-top:9px;border-top:1.5px solid var(--edge2);padding-top:8px}
+.hgtit{font-size:11px;font-weight:700;color:#1d5a7d;text-transform:uppercase;
+  letter-spacing:.6px;margin-bottom:5px}
+.hgoal{font-size:13px;color:#4a7086;line-height:1.5;padding:1px 0}
+.hgoal b{font-family:var(--mono);font-size:13.5px;color:#0d2331;
+  background:rgba(26,127,208,.13);border-radius:99px;padding:1px 8px;margin-right:2px}
+.hgoal i{font-style:normal;font-family:var(--mono);font-weight:700;color:#0d2331}
+.hgoal.hit b{background:rgba(47,191,168,.24);color:#0d6b5c}
+.hgoal.hit{color:#0d6b5c}
+.hgnote{font-size:12px;color:#5c8299;margin-top:4px}
+
+/* acuse de recibo al sumar */
+@keyframes acuseBtn{
+  0%{transform:translateY(3px);filter:brightness(1.35)}
+  55%{transform:translateY(0);filter:brightness(1.12)}
+  100%{transform:translateY(0);filter:brightness(1)}}
+@keyframes acuseNum{
+  0%{color:#1a7fd0;transform:scale(1.13)}
+  60%{color:#1a7fd0;transform:scale(1)}
+  100%{color:inherit;transform:scale(1)}}
+.hbig.acuse{animation:acuseBtn .26s ease-out}
+.hmn b.acuse,.hhcount b.acuse,.hcnum.acuse{animation:acuseNum .34s ease-out}
+@media (prefers-reduced-motion:reduce){
+  .hbig.acuse,.hmn b.acuse,.hhcount b.acuse,.hcnum.acuse{animation:none}}
 </style>
 </head>
 <body>
@@ -4447,31 +4473,24 @@ function huntOdds(h){
   s+=`<div class="hodrow"><span>${hRows(h)} tirada${hRows(h)>1?'s':''} contra 1/${miles(h.base)}</span>
     <b>${h.charm?'con Amuleto':'sin Amuleto'}</b></div>`;
   if(h.stats==='full'){
-    const c=hcum(e,n);
-    s+=`<div class="hbarwrap"><i style="width:${Math.min(100,c*100).toFixed(1)}%"></i></div>
-      <div class="hodrow big"><span>Probabilidad de haberlo encontrado ya</span><b>${pct(c)}</b></div>`;
-    const ms=[[.5,'50 %'],[.9,'90 %'],[.99,'99 %']].map(([q,lab])=>{
-      const need=hNeed(e,q)-n;
-      return `<span class="hmile${need<=0?' hit':''}">${lab} · ${need<=0?'superado':'faltan '+miles(need)}</span>`;
+    // una sola sección: por cada hito, dónde vas y cuánto te queda a tu ritmo
+    const pace=tPace(h), step=Math.max(1,h.step||1), medidas=h.tN||0;
+    const filas=[[.3,'30 %'],[.5,'50 %'],[.9,'90 %']].map(([q,lab])=>{
+      const need=hNeed(e,q);
+      if(n>=need) return `<div class="hgoal hit"><b>${lab}</b> · superado</div>`;
+      const eta = (pace && medidas>=3)
+        ? ` · a tu ritmo (${durPace(pace)}): <i>${dur(Math.ceil((need-n)/step)*pace)}</i>`
+        : '';
+      return `<div class="hgoal"><b>${lab}</b> · ${miles(n)}/${miles(need)}${eta}</div>`;
     }).join('');
-    s+=`<div class="hmiles">${ms}</div>`;
-    // previsión de tiempo al ritmo medido
-    const pace=tPace(h), step=Math.max(1,h.step||1);
-    if(pace && (h.tN||0)>=3){
-      const eta=[[.3,'30 %'],[.5,'50 %'],[.9,'90 %']].map(([q,lab])=>{
-        const need=hNeed(e,q)-n;
-        if(need<=0) return `<span class="heta hit">${lab} · superado</span>`;
-        return `<span class="heta">${lab} · ${dur(Math.ceil(need/step)*pace)}</span>`;
-      }).join('');
-      s+=`<div class="hpace">A tu ritmo · <b>${durPace(pace)}</b> por acción
-        <em>(${miles(h.tN)} medidas)</em></div><div class="hetas">${eta}</div>`;
-    } else if((h.tN||0)>0){
-      s+=`<div class="hpace">Midiendo el ritmo… <em>${h.tN} de 3 pulsaciones</em></div>`;
-    }
+    s+=`<div class="hgoals"><div class="hgtit">Probabilidad y ritmo</div>${filas}`;
+    if(medidas>0 && medidas<3)
+      s+=`<div class="hgnote">Midiendo el ritmo… ${medidas} de 3 pulsaciones</div>`;
     const mean=Math.round(1/p);
     if(n>mean) s+=`<div class="hwarn">Vas ${miles(n-mean)} por encima de la media (${miles(mean)}).
       Es más común de lo que parece: la mitad de las cazas terminan antes del 69 % de esa media,
       y la otra mitad se alarga bastante más.</div>`;
+    s+='</div>';
   }
   return s+'</div>';
 }
@@ -4654,7 +4673,8 @@ function huntForm(){
       <span class="hcalc">0 = sin avisos</span></div>
     <div class="ctlrow chkrow">
       <button class="chk${d.usePhases?' on':''}" data-hphases="1"><i></i>Contar fases (si sale otro shiny antes)</button>
-      <button class="chk${d.keys?' on':''}" data-hkeys="1"><i></i>Barra espaciadora suma 1 en el ordenador</button></div>
+      <button class="chk${d.keys?' on':''}" data-hkeys="1"><i></i>Barra espaciadora suma 1 en el ordenador</button>
+      <button class="chk${VIBRA?' on':''}" data-hvibra="1"><i></i>Vibrar al sumar · afecta a todas las cazas</button></div>
     <div class="hfields"><label class="hlab wide">Nota
       <input type="text" id="hnote" class="lockinput" maxlength="120"
         placeholder="Ruta, hora del día, lo que quieras recordar" value="${esc(d.note||'')}"></label></div>
@@ -4691,8 +4711,8 @@ function huntCounter(h){
   s+=`<div class="hchrono${h.paused?' pausada':''}">
     <span class="hcro" id="hchrono">${h.paused?'En pausa':'0,0 s'}</span>
     <span class="hcrol">${h.paused?'el tiempo no corre':'desde el último toque'}</span>
-    ${(h.tN||0)>=3?`<span class="hcrom">media <b>${durPace(tPace(h))}</b> ·
-      ${miles(h.tN)} medidas</span>`:''}
+    <span class="hcrom">${h.tSum?`acumulado <b>${dur(h.tSum)}</b>`:''}${
+      (h.tN||0)>=3?` · media <b>${durPace(tPace(h))}</b>`:''}</span>
     <button class="pausebtn" data-hpause="1">${h.paused?'▶ Reanudar':'⏸ Pausar'}</button>
     ${(h.tN||0)>=3?`<button class="minibtn" data-hpacereset="1">Reiniciar ritmo</button>`:''}</div>
   <div class="hctr">
@@ -4849,6 +4869,15 @@ function methodsHTML(){
 }
 
 // ---- acciones
+let VIBRA = localStorage.getItem(KEY+':vibra')!=='0';
+// destello breve en el botón y en la cifra, para confirmar que el toque contó
+function acuse(){
+  ['.hbig','.hmn b','.hhcount b','.hcnum'].forEach(sel=>{
+    const el=document.querySelector(sel); if(!el) return;
+    el.classList.remove('acuse'); void el.offsetWidth; el.classList.add('acuse');
+  });
+  if(VIBRA && navigator.vibrate){ try{ navigator.vibrate(18); }catch(e){} }
+}
 function huntAdd(h,n){
   if(n>0){
     const now=Date.now();
@@ -4868,6 +4897,7 @@ function huntAdd(h,n){
   h.total=Math.max(0,(h.total||0)+n);
   h.sinceCheck=Math.max(0,(h.sinceCheck||0)+n);
   saveHunts(); render();
+  if(n>0) acuse();
 }
 function huntFinish(h,mark){
   h.done=true; h.end=new Date().toISOString();
@@ -4901,7 +4931,7 @@ setInterval(()=>{
 // Cada pantalla deja una entrada en el historial, así que "atrás" retrocede
 // dentro de la app en vez de cerrarla. Solo cuenta lo que es navegar de verdad:
 // marcar un Pokémon o cambiar un filtro no crea entradas.
-const APPBUILD='2026-08-29 · 12';
+const APPBUILD='2026-08-29 · 13';
 let navSig=null;
 function navState(){
   return {v:opts.view, dex:selDex, pv:pokeView, ds:dexSrc, dsh:dexShiny?1:0,
@@ -5124,6 +5154,10 @@ app.addEventListener('click',e=>{
   if(hph && newHunt){ newHunt.usePhases=!newHunt.usePhases; render(); return; }
   const hk=e.target.closest('[data-hkeys]');
   if(hk && newHunt){ newHunt.keys=!newHunt.keys; render(); return; }
+  const hv=e.target.closest('[data-hvibra]');
+  if(hv){ VIBRA=!VIBRA; localStorage.setItem(KEY+':vibra',VIBRA?'1':'0');
+    if(VIBRA && navigator.vibrate){ try{ navigator.vibrate(18); }catch(e){} }
+    render(); return; }
   if(e.target.id==='hstart' && newHunt){
     if(!newHunt.kw){ alert('Elige primero el Pokémon que vas a cazar.'); return; }
     const n=document.getElementById('hnote'); if(n) newHunt.note=n.value.trim();
@@ -5159,7 +5193,10 @@ app.addEventListener('click',e=>{
   if(hsp){ const h=huntOf(openHunt); if(h){ h.step=+hsp.dataset.hstep; saveHunts(); render(); } return; }
   const hpa=e.target.closest('[data-hpause]');
   if(hpa){ const h=huntOf(openHunt);
-    if(h){ h.paused=!h.paused; h.tLast=0; saveHunts(); render(); }
+    if(h){ h.paused=!h.paused;
+      // al reanudar el cronómetro echa a andar solo; el hueco de la pausa no se mide
+      h.tLast = h.paused ? 0 : Date.now();
+      saveHunts(); render(); }
     return; }
   const hpr=e.target.closest('[data-hpacereset]');
   if(hpr){ const h=huntOf(openHunt);
