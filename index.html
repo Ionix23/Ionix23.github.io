@@ -4263,6 +4263,18 @@ function renderSettings(){
     }).join('')+'</div>';
     h+=`<div class="meta">Al activar, desactivar o borrar un parche la página se recarga para
       reconstruir los datos.</div></div>`;
+    if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+      pedirSprites('sprites:contar');
+      h+=`<div class="gsec"><h2>Sprites guardados</h2>
+        <div class="meta">Los sprites se descargan de internet la primera vez que los ves y
+        se quedan guardados en el móvil, así que a partir de entonces aparecen al instante
+        y la app funciona aunque estés sin cobertura. Se van guardando solos según navegas.</div>
+        <div class="hfields">
+          <span class="hcalc"><b id="sprcount">${SPRCACHE==null?'…':miles(SPRCACHE)}</b>
+            imágenes guardadas</span>
+          <button class="minibtn" id="sprclear">Vaciar y volver a descargar</button>
+        </div></div>`;
+    }
     return h;
   }
   if(setTab==='boxes'){
@@ -4876,6 +4888,23 @@ setInterval(()=>{
   el.classList.toggle('warn', d>TMAX);
 },100);
 
+// ---- caché de sprites: la primera visita los baja, las siguientes salen del disco
+let SPRCACHE = null;      // nº de sprites guardados, null mientras no se sepa
+if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+  navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  navigator.serviceWorker.addEventListener('message', ev=>{
+    if(ev.data && ev.data.tipo==='sprites:total'){
+      SPRCACHE=ev.data.total;
+      const el=document.getElementById('sprcount');
+      if(el) el.textContent=miles(SPRCACHE);
+    }
+  });
+}
+function pedirSprites(msg){
+  const c=navigator.serviceWorker && navigator.serviceWorker.controller;
+  if(c) c.postMessage({tipo:msg});
+}
+
 // ---- pantalla de bienvenida: solo la primera vez, para fijar el EO
 function needsOnboard(){
   if(localStorage.getItem(KEY+':onboarded')) return false;
@@ -5110,6 +5139,10 @@ app.addEventListener('click',e=>{
   if(hdl){ const id=hdl.dataset.hdel;
     if(confirm('¿Borrar esta caza del registro?')){
       hunts=hunts.filter(x=>x.id!==id); saveHunts(); render(); }
+    return; }
+  if(e.target.id==='sprclear'){
+    if(confirm('¿Vaciar los sprites guardados? Se volverán a descargar según navegues.')){
+      pedirSprites('sprites:vaciar'); }
     return; }
   if(e.target.id==='pload'){ document.getElementById('pfile').click(); return; }
   if(e.target.id==='pspec'){ showSpec=!showSpec; render(); return; }
