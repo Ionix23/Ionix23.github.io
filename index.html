@@ -2796,6 +2796,10 @@ header.hunting .headcol{flex:1 1 100%;max-width:none}
 .mobi .hcro{min-width:78px}
 .mobi .hcrol{flex:1 1 auto}
 .mobi .pausebtn{padding:6px 13px}
+
+/* el chip de la caza seleccionada heredaba el blanco de los botones de cabecera */
+.hsw.on, .hsw.on .hswn{color:#0d2331}
+.hsw.on .hswc{color:#1d5a7d;background:rgba(43,108,146,.16)}
 </style>
 </head>
 <body>
@@ -4888,6 +4892,56 @@ setInterval(()=>{
   el.classList.toggle('warn', d>TMAX);
 },100);
 
+// ================= navegación con el botón atrás del móvil =================
+// Cada pantalla deja una entrada en el historial, así que "atrás" retrocede
+// dentro de la app en vez de cerrarla. Solo cuenta lo que es navegar de verdad:
+// marcar un Pokémon o cambiar un filtro no crea entradas.
+let navSig=null;
+function navState(){
+  return {v:opts.view, dex:selDex, pv:pokeView, ds:dexSrc, dsh:dexShiny?1:0,
+    g:curGame, stab:setTab, htab:huntTab, oh:openHunt,
+    form:newHunt ? (newHunt.__edit?'e':'n') : null, ph:phaseOpen};
+}
+function navSync(yPrev){
+  let st, sig;
+  try{ st=navState(); sig=JSON.stringify(st); }catch(e){ return; }
+  if(navSig===null){
+    try{ history.replaceState({nav:st,y:0},''); }catch(e){}
+    navSig=sig; return;
+  }
+  if(sig===navSig) return;
+  try{
+    // la entrada que dejamos atrás se queda con su posición de scroll
+    history.replaceState({nav:JSON.parse(navSig),
+      y:Math.round(yPrev==null?window.scrollY:yPrev)},'');
+    history.pushState({nav:st,y:0},'');
+  }catch(e){}
+  navSig=sig;
+}
+function applyNav(st){
+  opts.view=st.v; selDex=st.dex; pokeView=st.pv; dexSrc=st.ds; dexShiny=!!st.dsh;
+  curGame=st.g; setTab=st.stab; huntTab=st.htab; openHunt=st.oh; phaseOpen=st.ph;
+  setCntOpen=false; endOpen=null;
+  if(!st.form) newHunt=null;
+  else if(!newHunt || (newHunt.__edit?'e':'n')!==st.form){
+    if(st.form==='e' && st.oh){ const t=huntOf(st.oh);
+      newHunt = t ? Object.assign({},t,{__edit:true}) : newHuntDraft(); }
+    else newHunt=newHuntDraft();
+  }
+  vdex.classList.toggle('on',st.v==='dex'); vbox.classList.toggle('on',st.v==='box');
+  vhunt.classList.toggle('on',st.v==='hunt'); vset.classList.toggle('on',st.v==='set');
+}
+addEventListener('popstate',e=>{
+  const d=e.state;
+  if(!d || !d.nav) return;          // sin estado propio: que salga de la app
+  navSig=JSON.stringify(d.nav);
+  applyNav(d.nav);
+  huntGo=null;                      // el salto automático no debe pelearse con el scroll
+  render();
+  const y=d.y||0;
+  requestAnimationFrame(()=>window.scrollTo(0,y));
+});
+
 // ---- caché de sprites: la primera visita los baja, las siguientes salen del disco
 let SPRCACHE = null;      // nº de sprites guardados, null mientras no se sepa
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
@@ -4954,6 +5008,7 @@ addEventListener('keydown',e=>{
   else if(e.key==='Backspace'){ e.preventDefault(); huntAdd(h,-h.step); }
 });
 function render(){
+  const yPrev=window.scrollY;
   const bi=boxIndex(); BOXMAP=bi.map; GENBOX=bi.genBox; headerCtl();
   const v=opts.view;
   document.querySelector('header').classList.toggle('bare', v==='set');
@@ -4969,13 +5024,16 @@ function render(){
   headHeight();
   if(v==='hunt') huntScroll();
   if(v==='dex'&&selDex===null&&scrollDex){ window.scrollTo(0,scrollDex); scrollDex=0; }
+  navSync(yPrev);
 }
 
 // ---- eventos
 const app=document.getElementById('app');
 app.addEventListener('click',e=>{
   const bk=e.target.closest('[data-back]');
-  if(bk){ selDex=null; render(); return; }
+  if(bk){ if(navSig!==null && history.state && history.state.nav) history.back();
+    else { selDex=null; render(); }
+    return; }
   const sbx=e.target.closest('[data-shinybox]');
   if(sbx){ showShinyBoxes=!showShinyBoxes;
     localStorage.setItem(KEY+':shinyboxes', showShinyBoxes?'1':'0'); render(); return; }
@@ -5219,7 +5277,9 @@ document.getElementById('dexctl').addEventListener('click',e=>{
     setCntOpen=false; endOpen=null; phaseOpen=null; newHunt=null;
     huntGo='ctr'; window.scrollTo(0,0); render(); return; }
   const bk=e.target.closest('[data-back]');
-  if(bk){ selDex=null; render(); window.scrollTo(0,0); return; }
+  if(bk){ if(navSig!==null && history.state && history.state.nav) history.back();
+    else { selDex=null; render(); window.scrollTo(0,0); }
+    return; }
   const ds=e.target.closest('[data-dexset]');
   if(ds){ const k=ds.dataset.dexset;
     dexSrc = k==='game'?'game':'nat';
