@@ -2880,6 +2880,7 @@ El progreso se guarda en este navegador.</footer>
 </div>
 <input type="file" id="file" accept="application/json" hidden>
 <input type="file" id="pfile" accept="application/json" hidden>
+<input type="file" id="hfile" accept="application/json" hidden>
 <div id="onboard" hidden>
   <div class="obcard">
     <div class="obhead">
@@ -2995,9 +2996,9 @@ SwSh:{intro:'Probabilidad base 1/4096. El Amuleto Iris suma 2 tiradas. La clave 
   h:['Contador de especie','Prob. de que salga con destello','Tiradas','Ratio sin amuleto','Ratio con Amuleto Iris'],
   r:[['0 – 19','—','1','1/4096','1/1365'],['20 – 49','1/1000','2','1/2048','1/1024'],['50 – 99','1/800','3','1/1365','1/819'],['100 – 199','1/600','4','1/1024','1/683'],['200 – 299','1/400','5','1/819','1/585'],['300 – 499','1/200','6','1/683','1/512'],['500 o más','1/100','7','1/585','1/455']],
   nota:'Solo cuenta para encuentros del overworld. La pesca y los encuentros ocultos entre hierba no generan destello.'},
- {n:'Incursiones Dinamax (Max Lair)',d:'En las Nieves de la Corona puedes cazar legendarios shiny en las Incursiones Dinamax, que es la única vía con tu EO para muchos de ellos. El Amuleto Iris no afecta aquí.',
-  h:['Situación','Ratio'],r:[['Legendario al final de la incursión','1/300'],['Con Amuleto Iris','1/300 (no afecta)']],
-  nota:'Puedes ver si es shiny antes de capturarlo, así que si no lo es, reinicia sin guardar y repite.'},
+ {n:'Incursiones Dinamax (Max Lair)',d:'En las Nieves de la Corona puedes cazar legendarios shiny en las Incursiones Dinamax, que es la única vía con tu EO para muchos de ellos. La probabilidad es fija por ejemplar, no depende de cuántos captures en la aventura, y <b>el Amuleto Iris sí cuenta aquí</b>.',
+  h:['Situación','Ratio'],r:[['Sin Amuleto Iris','1/300'],['Con Amuleto Iris','1/100']],
+  nota:'Puedes ver si es shiny antes de capturarlo, así que si no lo es, reinicia sin guardar y repite. Ojo: el amuleto sí afecta a las incursiones, pero no a los encuentros estáticos del juego (los Regis, las Espadas Justicieras y compañía).'},
  {n:'Cría (método Masuda)',d:'Cruza dos Pokémon de idiomas de consola distintos y cada huevo recibe 6 tiradas extra. Lleva un Pokémon con Cuerpo Llama en el equipo para que eclosionen en la mitad de pasos.',
   h:['Condiciones','Tiradas','Ratio'],r:[['Sin bonus','1','1/4096'],['Amuleto Iris','3','1/1365'],['Masuda','7','1/585'],['Masuda + Amuleto Iris','9','1/455']],
   nota:'En SwSh el Masuda da 6 tiradas extra, una más que en juegos anteriores.'}]},
@@ -4293,6 +4294,14 @@ function renderSettings(){
     }).join('')+'</div>';
     h+=`<div class="meta">Al activar, desactivar o borrar un parche la página se recarga para
       reconstruir los datos.</div></div>`;
+    h+=`<div class="gsec"><h2>Añadir cazas al registro</h2>
+      <div class="meta">Importa un archivo de cazas ya terminadas —por ejemplo el histórico
+      que llevabas en otra app— y se <b>suman</b> a tu registro. No toca tus marcas, tus candados,
+      tus notas ni las cazas que ya tengas: solo añade. Las repetidas se saltan.</div>
+      <div class="hfields">
+        <button class="bigbtn on" id="hload" style="max-width:250px">↓ Importar cazas</button>
+        <span class="hcalc"><b>${hunts.filter(x=>x.done).length}</b> cazas en el registro</span>
+      </div></div>`;
     h+=`<div class="gsec"><h2>Versión</h2>
       <div class="meta">Si acabas de subir un archivo nuevo y aquí sigue el número viejo,
       la copia guardada aún no se ha renovado: cierra la app y vuelve a abrirla.</div>
@@ -4571,7 +4580,8 @@ function logCard(h){
     <div class="lcinfo">
       <b>${esc(h.name)}${h.form?' · '+esc(h.form):''} ✦</b>
       <span class="lcmeta">${gicon(h.game)}${GAMESHORT[h.game]||h.game} · ${HMETLAB[h.method]||h.method}</span>
-      <span class="lcmeta">${fdate(h.start)} → ${fdate(h.end)} · ${hDays(h)} día${hDays(h)>1?'s':''}</span>
+      ${h.start&&h.end?`<span class="lcmeta">${fdate(h.start)} → ${fdate(h.end)} ·
+        ${hDays(h)} día${hDays(h)>1?'s':''}</span>`:''}
       ${h.phases&&h.phases.length?`<span class="lcph">${h.phases.length} shiny de fase:
         ${h.phases.map(p=>esc(p.name)).join(', ')}</span>`:''}
       ${h.note?`<span class="lcnote">${esc(h.note)}</span>`:''}
@@ -4582,9 +4592,9 @@ function logCard(h){
     ${(h.tN||0)>=3?`<div class="lcstats">
       <div><b>${miles(hActs(h))}</b><span>${h.step>1?'acciones':'resets'}</span></div>
       <div><b>${durPace(tPace(h))}</b><span>por ${h.step>1?'acción':'reset'}</span></div>
-      <div><b>${dur(h.tSum)}</b><span>tiempo cronometrado</span></div>
+      <div><b>${dur(h.tSum)}</b><span>tiempo ${h.est?'estimado':'cronometrado'}</span></div>
       ${h.step>1?`<div><b>${h.step}</b><span>apariciones por acción</span></div>`:''}
-      <div><b>${miles(h.tN)}</b><span>medidas de tiempo</span></div>
+      ${h.est?'':`<div><b>${miles(h.tN)}</b><span>medidas de tiempo</span></div>`}
     </div>`:''}
   </div>`;
 }
@@ -4776,7 +4786,10 @@ function phasePicker(h){
 
 // ---- registro
 function huntLog(){
-  const done=hunts.filter(h=>h.done).sort((a,b)=>new Date(b.end)-new Date(a.end));
+  const done=hunts.filter(h=>h.done).sort((a,b)=>{
+    // las cazas importadas no traen fecha: van detrás, en el orden del archivo
+    const ta=a.end?new Date(a.end).getTime():-1, tb=b.end?new Date(b.end).getTime():-1;
+    return tb-ta;});
   let s='';
   if(!done.length) return `<div class="gsec"><h2>Registro de cazas</h2>
     <div class="none">Todavía no has cerrado ninguna caza. Cuando termines una,
@@ -4796,7 +4809,7 @@ function huntLog(){
     <div><b>${miles(enc)}</b><span>encuentros</span></div>
     <div><b>${miles(Math.round(enc/done.length))}</b><span>media por caza</span></div>
     <div><b>${miles(med)}</b><span>mediana</span></div>
-    ${tTot?`<div><b>${dur(tTot)}</b><span>tiempo cronometrado</span></div>
+    ${tTot?`<div><b>${dur(tTot)}</b><span>tiempo de caza</span></div>
       <div><b>${miles(aTot)}</b><span>acciones en total</span></div>`:''}
     <div><b>${miles(hTotal(best))}</b><span>la más rápida · ${esc(best.name)}</span></div>
     <div><b>${miles(hTotal(worst))}</b><span>la más dura · ${esc(worst.name)}</span></div>
@@ -4931,7 +4944,7 @@ setInterval(()=>{
 // Cada pantalla deja una entrada en el historial, así que "atrás" retrocede
 // dentro de la app en vez de cerrarla. Solo cuenta lo que es navegar de verdad:
 // marcar un Pokémon o cambiar un filtro no crea entradas.
-const APPBUILD='2026-08-29 · 13';
+const APPBUILD='2026-08-30 · 15';
 let navSig=null;
 function navState(){
   return {v:opts.view, dex:selDex, pv:pokeView, ds:dexSrc, dsh:dexShiny?1:0,
@@ -5241,6 +5254,7 @@ app.addEventListener('click',e=>{
     if(confirm('¿Borrar esta caza del registro?')){
       hunts=hunts.filter(x=>x.id!==id); saveHunts(); render(); }
     return; }
+  if(e.target.id==='hload'){ document.getElementById('hfile').click(); return; }
   if(e.target.id==='appreload'){
     (async()=>{
       try{
@@ -5495,6 +5509,35 @@ document.getElementById('pfile').onchange=function(){
       'La página se recarga para aplicarlo.');
     location.reload();
   } catch(e){ alert('No he podido leer el archivo: '+e.message); } };
+  rd.readAsText(f);
+};
+
+document.getElementById('hfile').onchange=function(){
+  const f=this.files[0]; this.value=''; if(!f) return;
+  const rd=new FileReader();
+  rd.onload=()=>{ try{
+    const j=JSON.parse(rd.result);
+    const lista = Array.isArray(j) ? j : (j.cazas || j.hunts);
+    if(!Array.isArray(lista) || !lista.length)
+      return alert('Ese archivo no trae ninguna caza.');
+    const previos=new Set(hunts.map(x=>x.id));
+    let nuevas=0, repes=0;
+    lista.forEach(c=>{
+      if(!c || !c.id || !c.kw) return;
+      if(previos.has(c.id)){ repes++; return; }
+      previos.add(c.id);
+      // por si el índice de fila cambió entre versiones, lo recolocamos por nombre
+      const r = rows.find(x=>x.kw===c.kw && x.shiny && (x.form||'')===(c.form||''));
+      if(r) c.i=r.i;
+      c.done=true;
+      hunts.push(c); nuevas++;
+    });
+    saveHunts();
+    huntTab='log'; localStorage.setItem(KEY+':hunttab','log');
+    render();
+    alert('Añadidas '+nuevas+' cazas al registro'+
+      (repes?' ('+repes+' ya estaban y se han saltado)':'')+'.');
+  } catch(err){ alert('No he podido leer el archivo: '+err.message); } };
   rd.readAsText(f);
 };
 
