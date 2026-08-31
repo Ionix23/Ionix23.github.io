@@ -2801,6 +2801,64 @@ header.hunting .headcol{flex:1 1 100%;max-width:none}
 .hsw.on, .hsw.on .hswn{color:#0d2331}
 .hsw.on .hswc{color:#1d5a7d;background:rgba(43,108,146,.16)}
 
+/* ==========================================================================
+   Modo múltiple: varias cazas en pantalla, una por consola. Sin estadísticas,
+   solo lo que hace falta para ir alternando toques entre ellas.
+   ========================================================================== */
+.mres{background:rgba(43,108,146,.09);border:1.5px solid var(--edge2);border-radius:14px;
+  padding:10px 13px}
+.mrestit{font-size:11px;font-weight:700;color:#1d5a7d;text-transform:uppercase;
+  letter-spacing:.6px;margin-bottom:6px}
+.mrow{display:flex;align-items:center;gap:9px;padding:3px 0}
+.mrow img{width:34px;height:34px;object-fit:contain;flex:none}
+.mrn{font-size:14px;color:#0d2331;flex:1 1 auto;min-width:0;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.mrg{font-size:12px;color:#4a7086;flex:none}
+.mrow b{font-family:var(--mono);font-size:19px;color:#0d2331;flex:none;
+  font-variant-numeric:tabular-nums;min-width:64px;text-align:right}
+.mresnota{font-size:12px;color:#5c8299;margin-top:5px}
+.mplus{flex:none;width:46px;cursor:pointer;font:inherit;font-size:26px;font-weight:700;
+  border-radius:16px;border:2px solid var(--edge2);background:#fff;color:#1d5a7d;padding:0}
+.mplus:hover{border-color:#1a7fd0;background:#eaf7ff}
+.mwrap{display:grid;gap:10px;margin-top:14px}
+.mpan{background:linear-gradient(180deg,#f4fcff,#dcf0fb);border:2px solid var(--edge2);
+  border-radius:16px;padding:10px 12px}
+.mpan.pausada{background:rgba(255,193,7,.14);border-color:#e0a800}
+.mtop{display:flex;align-items:center;gap:10px;position:relative}
+.mtop img{width:46px;height:46px;object-fit:contain;flex:none}
+.mnom{flex:1 1 auto;min-width:0}
+.mnom b{display:block;font-size:14.5px;color:#0d2331;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.mnom span{display:flex;align-items:center;gap:5px;font-size:12px;color:#4a7086}
+.mnom .gi{width:15px;height:15px;flex:none}
+.mcif{flex:none;text-align:right;padding-right:30px}
+.mcif b{display:block;font-family:var(--mono);font-size:30px;line-height:1;color:#0d2331;
+  font-variant-numeric:tabular-nums}
+.mcif span{font-size:11px;color:#4a7086}
+.mquit{position:absolute;top:-2px;right:-2px;width:22px;height:22px;border-radius:50%;
+  border:1.5px solid var(--edge2);background:#fff;color:#8a2b2b;cursor:pointer;
+  font:inherit;font-size:12px;line-height:1;padding:0}
+.mquit:hover{background:#ffeaea;border-color:#d42a30}
+.mcro{display:flex;align-items:center;gap:9px;margin-top:7px}
+.mcro .hcro{font-size:20px;min-width:80px}
+.mcrol{flex:1 1 auto;font-size:11.5px;color:#4a7086}
+.mcro .pausebtn{padding:5px 12px;font-size:14px}
+.mbtns{display:flex;gap:8px;margin-top:8px}
+.mbig{flex:1 1 auto;min-height:78px;cursor:pointer;border-radius:14px;font:inherit;
+  border:2px solid #0f5f9e;color:#fff;background:linear-gradient(180deg,#37a9f5,#1a7fd0);
+  font-family:var(--mono);font-size:30px;font-weight:700;
+  box-shadow:0 3px 0 #0f5f9e;user-select:none;-webkit-tap-highlight-color:transparent}
+.mbig:active{transform:translateY(3px);box-shadow:0 0 0 #0f5f9e}
+.mmin{flex:none;width:86px;cursor:pointer;border-radius:14px;font:inherit;font-family:var(--mono);
+  font-size:20px;color:#8a2b2b;background:#fff;border:2px solid var(--edge2)}
+.mmin:active{background:#ffeaea}
+.motros{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0 4px}
+.motros .hcalc{flex:1 1 100%;padding:0;font-size:12.5px}
+.mbig.acuse{animation:acuseBtn .26s ease-out}
+.mcif b.acuse{animation:acuseNum .34s ease-out}
+.mobi .mbig{min-height:88px;font-size:34px}
+.mobi .mcif b{font-size:26px}
+
 /* sección unificada de probabilidad y ritmo */
 .hgoals{margin-top:9px;border-top:1.5px solid var(--edge2);padding-top:8px}
 .hgtit{font-size:11px;font-weight:700;color:#1d5a7d;text-transform:uppercase;
@@ -4387,7 +4445,7 @@ function renderSettings(){
 let hunts=[]; try{ hunts=JSON.parse(localStorage.getItem(KEY+':hunts')||'[]'); }catch(e){ hunts=[]; }
 const saveHunts=()=>localStorage.setItem(KEY+':hunts',JSON.stringify(hunts));
 let huntTab = localStorage.getItem(KEY+':hunttab') || 'act';     // act | log | met
-let openHunt = null;      // id de la caza abierta en el contador
+let openHunt = localStorage.getItem(KEY+':openhunt') || null;  // caza abierta en el contador
 let newHunt  = null;      // borrador de caza nueva
 let huntQ    = '';        // buscador de especie del formulario
 let setCntOpen = false;   // panel "fijar recuento"
@@ -4544,6 +4602,18 @@ function huntHead(){
                   : '✦ Nueva caza · elige abajo qué vas a cazar')}</div>`;
   const act=hunts.filter(x=>!x.done);
   const h=openHunt?huntOf(openHunt):null;
+  // en modo múltiple la pantalla de arriba no destaca ninguna: solo resume
+  if(h && !h.done && multiVivas().length){
+    const todas=[h].concat(multi.map(huntOf)).filter(Boolean);
+    return nav+`<div class="mres"><div class="mrestit">Contando ${todas.length} cazas a la vez</div>`+
+      todas.map(x=>`<div class="mrow">
+        <img loading="lazy" decoding="async" src="${huntSprite(x)}" alt=""
+          onerror="this.style.visibility='hidden'">
+        <span class="mrn">${esc(x.name)}${x.form?' · '+esc(x.form):''}</span>
+        <span class="mrg">${GAMESHORT[x.game]||x.game}</span>
+        <b>${miles(hTotal(x))}</b></div>`).join('')+
+      `<div class="mresnota">Las estadísticas vuelven al dejar una sola caza.</div></div>`;
+  }
   if(!h || h.done) return nav+(act.length
     ? huntSwitch(act,null)+'<div class="hhempty">Elige una de tus cazas abiertas para ver aquí su contador.</div>'
     : '<div class="hhempty">Todavía no tienes ninguna caza en marcha. Empieza una desde la pantalla de abajo.</div>');
@@ -4695,7 +4765,69 @@ function huntForm(){
 }
 
 // ---- contador
+// ---- modo múltiple: varias cazas a la vez, una por consola
+let multi=[]; try{ multi=JSON.parse(localStorage.getItem(KEY+':multi')||'[]'); }catch(e){ multi=[]; }
+let multiPick=false;
+const saveMulti=()=>localStorage.setItem(KEY+':multi',JSON.stringify(multi));
+// solo valen cazas abiertas y distintas de la principal
+function multiVivas(){
+  multi=multi.filter(id=>{ const x=huntOf(id); return x && !x.done && id!==openHunt; });
+  return multi;
+}
+function panelMini(h, principal){
+  const chrono = h.paused ? 'En pausa' : '0,0 s';
+  return `<div class="mpan${h.paused?' pausada':''}" data-panel="${h.id}">
+    <div class="mtop">
+      <img loading="lazy" decoding="async" src="${huntSprite(h)}" alt=""
+        onerror="this.style.visibility='hidden'">
+      <div class="mnom"><b>${esc(h.name)}${h.form?' · '+esc(h.form):''}</b>
+        <span>${gicon(h.game)}${GAMESHORT[h.game]||h.game}</span></div>
+      <div class="mcif"><b>${miles(h.count)}</b><span>${h.usePhases?'fase':'encuentros'}</span></div>
+      ${principal?'':`<button class="mquit" data-hmultidel="${h.id}" title="Quitar de la pantalla">✕</button>`}
+    </div>
+    <div class="mcro">
+      <span class="hcro" data-h="${h.id}">${chrono}</span>
+      <span class="mcrol">${h.tSum?`acumulado ${dur(h.tSum)}`:'sin tiempo aún'}${
+        (h.tN||0)>=3?` · media ${durPace(tPace(h))}`:''}</span>
+      <button class="pausebtn" data-hpausem="${h.id}">${h.paused?'▶':'⏸'}</button>
+    </div>
+    <div class="mbtns">
+      <button class="mbig" data-haddm="${h.id}|${h.step}">+${h.step}</button>
+      <button class="mmin" data-haddm="${h.id}|-${h.step}">−${h.step}</button>
+    </div>
+  </div>`;
+}
+function multiCounter(h){
+  const lista=[h].concat(multiVivas().map(huntOf));
+  let s='<div class="mwrap">'+lista.map((x,i)=>panelMini(x,i===0)).join('')+'</div>';
+  s+=`<div class="motros">
+    <button class="minibtn" data-hmultiadd="1">+ Añadir otra caza</button>
+    <button class="minibtn" data-hmulticlear="1">Salir del modo múltiple</button>
+    <span class="hcalc">Con varias cazas a la vez se ocultan las estadísticas;
+      cada una guarda su recuento y su ritmo por separado.</span></div>`;
+  if(multiPick) s+=multiPicker();
+  return s;
+}
+function multiPicker(){
+  const libres=hunts.filter(x=>!x.done && x.id!==openHunt && !multi.includes(x.id));
+  let s=`<div class="gsec"><h2>Añadir una caza a la pantalla</h2>`;
+  if(!libres.length) s+=`<div class="none">No te quedan más cazas abiertas.
+    Crea otra desde <b>+ Nueva caza</b>.</div>`;
+  else s+='<div class="hlist">'+libres.map(x=>
+    `<button class="hcard" data-hmultipick="${x.id}">
+      <img loading="lazy" decoding="async" src="${huntSprite(x)}" alt=""
+        onerror="this.style.visibility='hidden'">
+      <div class="hcinfo"><b>${esc(x.name)}${x.form?' · '+esc(x.form):''}</b>
+        <span>${GAMESHORT[x.game]||x.game} · ${HMETLAB[x.method]||x.method}</span></div>
+      <div class="hcnum">${miles(hTotal(x))}</div></button>`).join('')+'</div>';
+  s+=`<div class="otrow"><button class="minibtn" data-hmulticancel="1">Cancelar</button></div></div>`;
+  return s;
+}
+
 function huntCounter(h){
+  // el selector ocupa la pantalla entera: se elige y se vuelve
+  if(multiPick && !multiVivas().length) return multiPicker();
+  if(multiVivas().length) return multiCounter(h);
   const steps=[...new Set([1,5,10,50,h.step])].sort((a,b)=>a-b);
   const n=hTotal(h), e=hEff(h);
   // en móvil la cabecera no se queda pegada, así que la cifra se repite aquí:
@@ -4719,13 +4851,15 @@ function huntCounter(h){
       <button class="minibtn" data-hchecked="1">Ya he comprobado</button></div>`;
   }
   s+=`<div class="hchrono${h.paused?' pausada':''}">
-    <span class="hcro" id="hchrono">${h.paused?'En pausa':'0,0 s'}</span>
+    <span class="hcro" id="hchrono" data-h="${h.id}">${h.paused?'En pausa':'0,0 s'}</span>
     <span class="hcrol">${h.paused?'el tiempo no corre':'desde el último toque'}</span>
     <span class="hcrom">${h.tSum?`acumulado <b>${dur(h.tSum)}</b>`:''}${
       (h.tN||0)>=3?` · media <b>${durPace(tPace(h))}</b>`:''}</span>
     <button class="pausebtn" data-hpause="1">${h.paused?'▶ Reanudar':'⏸ Pausar'}</button>
     ${(h.tN||0)>=3?`<button class="minibtn" data-hpacereset="1">Reiniciar ritmo</button>`:''}</div>
   <div class="hctr">
+    ${hunts.filter(x=>!x.done).length>1
+      ? `<button class="mplus" data-hmultiadd="1" title="Contar otra caza a la vez">+</button>`:''}
     <button class="hbig" data-hadd="${h.step}">+${h.step}
       <em>${h.step>1?'1 acción · '+h.step+' apariciones':'toca para sumar'}</em></button>
     <div class="hside">
@@ -4846,7 +4980,7 @@ let phaseOpen=null;
 let huntGo=null;
 function huntScroll(){
   if(!huntGo) return;
-  const sel = huntGo==='pick' ? '#huntq' : (huntGo==='ctr' ? '.hmini' : '#hcfg');
+  const sel = huntGo==='pick' ? '#huntq' : (huntGo==='ctr' ? '.mwrap, .hmini' : '#hcfg');
   const ctr = huntGo==='ctr';
   huntGo=null;
   const el=document.querySelector(sel); if(!el) return;
@@ -4884,9 +5018,13 @@ function methodsHTML(){
 // ---- acciones
 let VIBRA = localStorage.getItem(KEY+':vibra')!=='0';
 // destello breve en el botón y en la cifra, para confirmar que el toque contó
-function acuse(){
-  ['.hbig','.hmn b','.hhcount b','.hcnum'].forEach(sel=>{
-    const el=document.querySelector(sel); if(!el) return;
+function acuse(id){
+  // en modo múltiple solo destella el panel que has tocado
+  const pan = id ? document.querySelector(`[data-panel="${id}"]`) : null;
+  const sels = pan ? ['.mbig','.mcif b'] : ['.hbig','.hmn b','.hhcount b','.hcnum'];
+  const raiz = pan || document;
+  sels.forEach(sel=>{
+    const el=raiz.querySelector(sel); if(!el) return;
     el.classList.remove('acuse'); void el.offsetWidth; el.classList.add('acuse');
   });
   if(VIBRA && navigator.vibrate){ try{ navigator.vibrate(18); }catch(e){} }
@@ -4910,7 +5048,7 @@ function huntAdd(h,n){
   h.total=Math.max(0,(h.total||0)+n);
   h.sinceCheck=Math.max(0,(h.sinceCheck||0)+n);
   saveHunts(); render();
-  if(n>0) acuse();
+  if(n>0) acuse(multiVivas().length ? h.id : null);
 }
 function huntFinish(h,mark){
   h.done=true; h.end=new Date().toISOString();
@@ -4927,24 +5065,25 @@ function headHeight(){
 // el cronómetro se actualiza por su cuenta: tocar el DOM entero cada segundo
 // sería tirar el rendimiento que tanto costó
 setInterval(()=>{
-  const el=document.getElementById('hchrono');
-  if(!el) return;
-  const h=openHunt?huntOf(openHunt):null;
-  if(!h){ return; }
-  if(h.paused){ el.textContent='En pausa'; el.classList.remove('warn'); return; }
-  if(!h.tLast){ el.textContent='0,0 s'; el.classList.remove('warn'); return; }
-  const d=Date.now()-h.tLast;
-  el.textContent = d<60000
-    ? (Math.floor(d/100)/10).toFixed(1).replace('.',',')+' s'
-    : Math.floor(d/60000)+' min '+String(Math.floor(d%60000/1000)).padStart(2,'0')+' s';
-  el.classList.toggle('warn', d>TMAX);
+  // puede haber varios cronómetros a la vez, uno por caza en pantalla
+  document.querySelectorAll('.hcro[data-h]').forEach(el=>{
+    const h=huntOf(el.dataset.h);
+    if(!h) return;
+    if(h.paused){ el.textContent='En pausa'; el.classList.remove('warn'); return; }
+    if(!h.tLast){ el.textContent='0,0 s'; el.classList.remove('warn'); return; }
+    const d=Date.now()-h.tLast;
+    el.textContent = d<60000
+      ? (Math.floor(d/100)/10).toFixed(1).replace('.',',')+' s'
+      : Math.floor(d/60000)+' min '+String(Math.floor(d%60000/1000)).padStart(2,'0')+' s';
+    el.classList.toggle('warn', d>TMAX);
+  });
 },100);
 
 // ================= navegación con el botón atrás del móvil =================
 // Cada pantalla deja una entrada en el historial, así que "atrás" retrocede
 // dentro de la app en vez de cerrarla. Solo cuenta lo que es navegar de verdad:
 // marcar un Pokémon o cambiar un filtro no crea entradas.
-const APPBUILD='2026-08-30 · 15';
+const APPBUILD='2026-08-30 · 16';
 let navSig=null;
 function navState(){
   return {v:opts.view, dex:selDex, pv:pokeView, ds:dexSrc, dsh:dexShiny?1:0,
@@ -5071,6 +5210,12 @@ function render(){
     if(hit) hit.scrollIntoView({block:'center',behavior:'smooth'});
   }
   headHeight();
+  // recordamos qué caza estaba abierta para volver a ella al reabrir la app
+  try{
+    const cur=openHunt&&huntOf(openHunt)&&!huntOf(openHunt).done ? openHunt : '';
+    if(cur!==openHunt) openHunt = cur || null;
+    localStorage.setItem(KEY+':openhunt', cur);
+  }catch(err){}
   if(v==='hunt') huntScroll();
   if(v==='dex'&&selDex===null&&scrollDex){ window.scrollTo(0,scrollDex); scrollDex=0; }
   navSync(yPrev);
@@ -5204,6 +5349,26 @@ app.addEventListener('click',e=>{
   if(had){ const h=huntOf(openHunt); if(h) huntAdd(h,+had.dataset.hadd); return; }
   const hsp=e.target.closest('[data-hstep]');
   if(hsp){ const h=huntOf(openHunt); if(h){ h.step=+hsp.dataset.hstep; saveHunts(); render(); } return; }
+  // ---- modo múltiple
+  const mad=e.target.closest('[data-hmultiadd]');
+  if(mad){ multiPick=true; render(); return; }
+  const mca=e.target.closest('[data-hmulticancel]');
+  if(mca){ multiPick=false; render(); return; }
+  const mpi=e.target.closest('[data-hmultipick]');
+  if(mpi){ const id=mpi.dataset.hmultipick;
+    if(!multi.includes(id)) multi.push(id);
+    multiPick=false; saveMulti(); render(); return; }
+  const mde=e.target.closest('[data-hmultidel]');
+  if(mde){ multi=multi.filter(x=>x!==mde.dataset.hmultidel); saveMulti(); render(); return; }
+  const mcl=e.target.closest('[data-hmulticlear]');
+  if(mcl){ multi=[]; multiPick=false; saveMulti(); render(); return; }
+  const mad2=e.target.closest('[data-haddm]');
+  if(mad2){ const [id,n]=mad2.dataset.haddm.split('|');
+    const t=huntOf(id); if(t) huntAdd(t,+n); return; }
+  const mpu=e.target.closest('[data-hpausem]');
+  if(mpu){ const t=huntOf(mpu.dataset.hpausem);
+    if(t){ t.paused=!t.paused; t.tLast = t.paused ? 0 : Date.now(); saveHunts(); render(); }
+    return; }
   const hpa=e.target.closest('[data-hpause]');
   if(hpa){ const h=huntOf(openHunt);
     if(h){ h.paused=!h.paused;
