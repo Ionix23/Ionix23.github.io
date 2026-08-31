@@ -2825,14 +2825,14 @@ header.hunting .headcol{flex:1 1 100%;max-width:none}
   border-radius:16px;padding:10px 12px}
 .mpan.pausada{background:rgba(255,193,7,.14);border-color:#e0a800}
 .mtop{display:flex;align-items:center;gap:10px;position:relative}
-.mtop img{width:46px;height:46px;object-fit:contain;flex:none}
+.mtop img{width:58px;height:58px;object-fit:contain;flex:none}
 .mnom{flex:1 1 auto;min-width:0}
-.mnom b{display:block;font-size:14.5px;color:#0d2331;white-space:nowrap;
+.mnom b{display:block;font-size:16.5px;color:#0d2331;white-space:nowrap;
   overflow:hidden;text-overflow:ellipsis}
 .mnom span{display:flex;align-items:center;gap:5px;font-size:12px;color:#4a7086}
 .mnom .gi{width:15px;height:15px;flex:none}
 .mcif{flex:none;text-align:right;padding-right:30px}
-.mcif b{display:block;font-family:var(--mono);font-size:30px;line-height:1;color:#0d2331;
+.mcif b{display:block;font-family:var(--mono);font-size:34px;line-height:1;color:#0d2331;
   font-variant-numeric:tabular-nums}
 .mcif span{font-size:11px;color:#4a7086}
 .mquit{position:absolute;top:-2px;right:-2px;width:22px;height:22px;border-radius:50%;
@@ -2844,7 +2844,7 @@ header.hunting .headcol{flex:1 1 100%;max-width:none}
 .mcrol{flex:1 1 auto;font-size:11.5px;color:#4a7086}
 .mcro .pausebtn{padding:5px 12px;font-size:14px}
 .mbtns{display:flex;gap:8px;margin-top:8px}
-.mbig{flex:1 1 auto;min-height:78px;cursor:pointer;border-radius:14px;font:inherit;
+.mbig{flex:1 1 auto;min-height:96px;cursor:pointer;border-radius:14px;font:inherit;
   border:2px solid #0f5f9e;color:#fff;background:linear-gradient(180deg,#37a9f5,#1a7fd0);
   font-family:var(--mono);font-size:30px;font-weight:700;
   box-shadow:0 3px 0 #0f5f9e;user-select:none;-webkit-tap-highlight-color:transparent}
@@ -2852,15 +2852,15 @@ header.hunting .headcol{flex:1 1 100%;max-width:none}
 .mmin{flex:none;width:72px;cursor:pointer;border-radius:14px;font:inherit;font-family:var(--mono);
   font-size:20px;color:#8a2b2b;background:#fff;border:2px solid var(--edge2)}
 .mmin:active{background:#ffeaea}
-.mfin{flex:none;width:60px;cursor:pointer;border-radius:14px;font:inherit;font-size:26px;
-  font-weight:700;color:#fff;background:#0d6b5c;border:2px solid #0a4f45}
+.mfin{display:block;width:100%;margin-top:8px;cursor:pointer;border-radius:11px;font:inherit;
+  font-size:14px;font-weight:600;padding:9px;color:#fff;background:#0d6b5c;border:2px solid #0a4f45}
 .mfin:active{background:#0f8a76}
 .motros{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0 4px}
 .motros .hcalc{flex:1 1 100%;padding:0;font-size:12.5px}
 .mbig.acuse{animation:acuseBtn .26s ease-out}
 .mcif b.acuse{animation:acuseNum .34s ease-out}
-.mobi .mbig{min-height:88px;font-size:34px}
-.mobi .mcif b{font-size:26px}
+.mobi .mbig{min-height:104px;font-size:38px}
+.mobi .mcif b{font-size:30px}
 
 /* sección unificada de probabilidad y ritmo */
 .hgoals{margin-top:9px;border-top:1.5px solid var(--edge2);padding-top:8px}
@@ -4496,6 +4496,27 @@ let endOpen  = null;      // id de la caza que está cerrándose
    aplica en ese método, que es lo que pasa en más sitios de los que parece).
    Datos contrastados con Bulbapedia, Serebii y los datamines de la comunidad.
    ========================================================================= */
+/* Capturables en un juego aunque no figuren en su Pokédex. De momento solo
+   pasa con las Aventuras Dinamax de Espada/Escudo, que traen 47 legendarios
+   de generaciones anteriores. El valor es true, o la lista de formas válidas. */
+const EXTRA={ SwSh:(()=>{ const o={};
+  [144,145,146,150,243,244,245,249,250,380,381,382,383,384,480,481,482,483,484,
+   485,487,488,641,642,643,644,645,646,716,717,718,785,786,787,788,791,792,793,
+   794,795,796,797,798,799,800,805,806].forEach(d=>{ o[d]=true; });
+  // en las aventuras salen formas concretas, no todas
+  o[144]=o[145]=o[146]=[''];              // los pájaros de Kanto, no los de Galar
+  o[641]=o[642]=o[645]=['Incarnate'];     // los genios, en forma Encarnada
+  o[718]=['0.5'];                         // Zygarde al 50 %
+  o[487]=o[646]=o[800]=[''];              // Giratina Modificada, Kyurem y Necrozma base
+  return o; })() };
+// ¿puedo cazar esta especie y forma en este juego?
+function enJuego(r, juego){
+  if(!r) return false;
+  if(r.games.some(([g])=>g===juego)) return true;
+  const e=EXTRA[juego] && EXTRA[juego][r.dex];
+  if(e===true) return true;
+  return Array.isArray(e) && e.includes(r.form||'');
+}
 const MJUEGO={
  RBY:[
   ['salvaje','Encuentro salvaje',8192,1,0,'1/8192 fijo. En Gen I el shiny depende de los DV, así que muchas especies no pueden serlo.'],
@@ -4584,17 +4605,17 @@ const MJUEGO={
   ['softreset','Soft reset',4096,1,3,'Legendarios y encuentros fijos.'],
   ['otro','Distorsión espaciotemporal',4096,1,3,'Dentro de las distorsiones.']],
  SV:[
-  ['brote','Brote masivo (60 debilitados) + Encuentro Poderoso',4096,6,2,'Lo máximo del juego: 6 tiradas, y 8 con amuleto, que da 1/512.'],
-  ['brote','Brote masivo (60 debilitados)',4096,3,2,'Tras debilitar 60 del brote.'],
-  ['brote','Brote masivo (30 debilitados)',4096,2,2,'Tras debilitar 30 del brote.'],
-  ['otro','Encuentro Poderoso Nv 3 (sándwich)',4096,4,2,'Solo el bocadillo, sin brote.'],
+  ['brote','Brote masivo (60 KO) + Poder Brillante Nv 3',4096,6,2,'Lo máximo del juego: debilita 60 del brote y come un bocadillo de Poder Brillante Nv 3 del tipo que buscas. 6 tiradas, 8 con amuleto: 1/512.'],
+  ['brote','Brote masivo (60 KO)',4096,3,2,'Tras debilitar 60 Pokémon del brote.'],
+  ['brote','Brote masivo (30 KO)',4096,2,2,'Tras debilitar 30 Pokémon del brote.'],
+  ['otro','Poder Brillante Nv 3 (bocadillo)',4096,4,2,'El bocadillo sube la probabilidad de ese tipo durante 30 minutos. Sin brote: 4 tiradas.'],
+  ['otro','Poder Brillante Nv 2 (bocadillo)',4096,3,2,'Nivel intermedio del bocadillo.'],
   ['salvaje','Encuentro salvaje',4096,1,2,'Sin bonus.'],
   ['huevo','Método Masuda',4096,6,2,'6 tiradas, 1/683. Con amuleto, 1/512.'],
-  ['incursion','Teraincursión',4096,1,2,'Las incursiones no llevan bonus propio.'],
   ['softreset','Soft reset',4096,1,2,'Legendarios y encuentros fijos.']],
  PLZA:[
   ['salvaje','Encuentro salvaje',4096,1,3,'Como en Leyendas Arceus, el amuleto suma 3 tiradas.'],
-  ['otro','Encuentro Poderoso Nv 3',4096,4,3,'Del contenido descargable: 7 tiradas con amuleto, 1/585.'],
+  ['otro','Encuentro poderoso Nv 3',4096,4,3,'Del contenido descargable: 7 tiradas con amuleto, 1/585. Datos aún parciales.'],
   ['softreset','Soft reset',4096,1,3,'Encuentros fijos no bloqueados.']]
 };
 const HMETHOD=[
@@ -4602,7 +4623,7 @@ const HMETHOD=[
  ['softreset','Soft-reset','Legendarios, iniciales, regalos: reinicias hasta que salga.'],
  ['huevo','Cría / Masuda','Cada huevo que eclosionas cuenta uno.'],
  ['brote','Brote masivo','Apariciones en masa: cuenta cada Pokémon del brote.'],
- ['incursion','Incursión / Teraincursión','Cada partida contra el mismo Pokémon.'],
+ ['incursion','Aventuras Dinamax','Cada aventura completa del Max Lair.'],
  ['radar','Poké Radar / cadena','Cadenas que suben la probabilidad con cada eslabón.'],
  ['sos','Llamada de auxilio / SOS','Aliados que llama el Pokémon salvaje.'],
  ['pesca','Pesca / cadena de caña','Cada pique cuenta uno.'],
@@ -4671,9 +4692,9 @@ function huntSprite(h){
 function newHuntDraft(){
   return { id:'h'+Date.now(), i:null, kw:'', name:'', form:'', dex:0,
     game:curGame, method:'salvaje', metNom:'', base:4096, rolls:1, charm:false, charmR:2, filt:100,
-    step:1, check:0, sinceCheck:0, count:0, total:0, phase:1, phases:[],
+    step:1, check:0, sinceCheck:0, count:0, total:0,
     tSum:0, tN:0, tLast:0, tRec:[], acts:0, paused:false,
-    stats:'full', usePhases:false, keys:false,
+    stats:'full', keys:false,
     start:new Date().toISOString(), end:null, done:false, note:'' };
 }
 
@@ -4735,13 +4756,13 @@ function huntHead(){
     const done=hunts.filter(h=>h.done);
     if(!done.length) return nav;
     const enc=done.reduce((a,h)=>a+hTotal(h),0);
-    const ph=done.reduce((a,h)=>a+(h.phases?h.phases.length:0),0);
+    const tt=done.reduce((a,h)=>a+(h.tSum||0),0);
     const avg=Math.round(enc/done.length);
     return nav+`<div class="hstatrow">
       <div class="hstat"><b>${done.length}</b><span>cazas cerradas</span></div>
       <div class="hstat"><b>${miles(enc)}</b><span>encuentros</span></div>
       <div class="hstat"><b>${miles(avg)}</b><span>media por caza</span></div>
-      <div class="hstat"><b>${ph}</b><span>shinies de fase</span></div></div>`;
+      <div class="hstat"><b>${tt?dur(tt):'—'}</b><span>tiempo total</span></div></div>`;
   }
   // mientras se rellena el formulario, la pantalla de arriba se aparta:
   // así el buscador y la configuración caben enteros en el móvil
@@ -4774,8 +4795,7 @@ function huntHead(){
         <button class="hedit" data-hedit="${h.id}" title="Editar los datos de esta caza">✎</button></div>
       <div class="hhmeta">${gicon(h.game)}${GAMESHORT[h.game]||h.game} · ${hMet(h)}
         · desde ${fdate(h.start)}</div>
-      <div class="hhcount"><b>${miles(h.count)}</b><span>${h.usePhases?'en esta fase':'encuentros'}</span></div>
-      ${h.usePhases?`<div class="hhsub">Fase ${h.phase} · ${miles(n)} en total</div>`:''}
+      <div class="hhcount"><b>${miles(h.count)}</b><span>encuentros</span></div>
     </div>
     <div class="hhodds">${huntOdds(h)}</div>
   </div>`;
@@ -4801,8 +4821,6 @@ function logCard(h){
       <span class="lcmeta">${gicon(h.game)}${GAMESHORT[h.game]||h.game} · ${hMet(h)}</span>
       ${h.start&&h.end?`<span class="lcmeta">${fdate(h.start)} → ${fdate(h.end)} ·
         ${hDays(h)} día${hDays(h)>1?'s':''}</span>`:''}
-      ${h.phases&&h.phases.length?`<span class="lcph">${h.phases.length} shiny de fase:
-        ${h.phases.map(p=>esc(p.name)).join(', ')}</span>`:''}
       ${h.note?`<span class="lcnote">${esc(h.note)}</span>`:''}
     </div>
     <div class="lcright"><b>${miles(n)}</b><span>encuentros</span>
@@ -4824,7 +4842,7 @@ function huntForm(){
   const q=huntQ.trim().toLowerCase();
   let h=`<div class="gsec"><h2>${ed?'Editar caza':'Nueva caza'}</h2>`;
   h+=`<div class="meta">${ed
-    ? 'Cambia lo que haga falta: el recuento que llevas y las fases no se tocan. Si cambias la probabilidad o el porcentaje de variante, las estadísticas se recalculan sobre los encuentros que ya tienes.'
+    ? 'Cambia lo que haga falta: el recuento que llevas no se toca. Si cambias la probabilidad o el porcentaje de variante, las estadísticas se recalculan sobre los encuentros que ya tienes.'
     : 'Elige el Pokémon shiny que persigues. El contador guarda su propio recuento, así que puedes tener varias cazas abiertas a la vez.'}</div>`;
   h+=`<input type="search" id="huntq" class="lockinput" autocomplete="off"
        placeholder="Buscar especie… (Gible, Ralts, 0443…)" value="${esc(huntQ)}">`;
@@ -4853,11 +4871,16 @@ function huntForm(){
     <button class="minibtn" data-hclear="1">Cambiar</button></div></div>`;
 
   const r=rowOfHunt(d);
-  const gs=r?r.games.map(g=>g[0]):GAMEORDER;
-  h+=`<div class="gsec" id="hcfg"><h2>Juego</h2><div class="meta">Marcados los juegos en cuya Pokédex aparece.</div>
-    <div class="gamegrid">`+GAMEORDER.map(g=>
-      `<button class="gbtn${d.game===g?' on':''}${gs.includes(g)?'':' dim'}" data-hgame="${g}"
-        title="${GAMEFULL[g]}">${gicon(g)}${GAMESHORT[g]}</button>`).join('')+`</div></div>`;
+  h+=`<div class="gsec" id="hcfg"><h2>Juego</h2>
+    <div class="meta">Marcados los juegos donde puedes cazarlo, incluidos los que no lo
+    llevan en su Pokédex pero sí lo dan por otra vía, como las Aventuras Dinamax.</div>
+    <div class="gamegrid">`+GAMEORDER.map(g=>{
+      const dex = r && r.games.some(([x])=>x===g);
+      const hay = r ? enJuego(r,g) : true;
+      const via = hay && !dex ? ' · no está en su Pokédex, pero sí es capturable' : '';
+      return `<button class="gbtn${d.game===g?' on':''}${hay?'':' dim'}" data-hgame="${g}"
+        title="${GAMEFULL[g]}${via}">${gicon(g)}${GAMESHORT[g]}</button>`;
+    }).join('')+`</div></div>`;
 
   // los métodos son los que existen en ESE juego, con su probabilidad ya puesta
   const mets = MJUEGO[d.game] || [];
@@ -4913,7 +4936,6 @@ function huntForm(){
       <input type="number" id="hcheck" class="lockinput" min="0" max="99999" value="${d.check||0}"></label>
       <span class="hcalc">0 = sin avisos</span></div>
     <div class="ctlrow chkrow">
-      <button class="chk${d.usePhases?' on':''}" data-hphases="1"><i></i>Contar fases (si sale otro shiny antes)</button>
       <button class="chk${d.keys?' on':''}" data-hkeys="1"><i></i>Barra espaciadora suma 1 en el ordenador</button>
       <button class="chk${VIBRA?' on':''}" data-hvibra="1"><i></i>Vibrar al sumar · afecta a todas las cazas</button></div>
     <div class="hfields"><label class="hlab wide">Nota
@@ -4943,7 +4965,7 @@ function panelMini(h, principal){
         onerror="this.style.visibility='hidden'">
       <div class="mnom"><b>${esc(h.name)}${h.form?' · '+esc(h.form):''}</b>
         <span>${gicon(h.game)}${GAMESHORT[h.game]||h.game}</span></div>
-      <div class="mcif"><b>${miles(h.count)}</b><span>${h.usePhases?'fase':'encuentros'}</span></div>
+      <div class="mcif"><b>${miles(h.count)}</b><span>encuentros</span></div>
       ${principal?'':`<button class="mquit" data-hmultidel="${h.id}" title="Quitar de la pantalla">✕</button>`}
     </div>
     <div class="mcro">
@@ -4955,8 +4977,8 @@ function panelMini(h, principal){
     <div class="mbtns">
       <button class="mbig" data-haddm="${h.id}|${h.step}">+${h.step}</button>
       <button class="mmin" data-haddm="${h.id}|-${h.step}">−${h.step}</button>
-      <button class="mfin" data-hend="${h.id}" title="Lo tengo, cerrar esta caza">✓</button>
     </div>
+    <button class="mfin" data-hend="${h.id}">✓ Caza completada</button>
   </div>`;
 }
 function multiCounter(h){
@@ -4978,9 +5000,7 @@ function multiCounter(h){
 function cierreCaza(h){
   const r=rowOfHunt(h);
   return `<div class="hend"><h3>Cerrar la caza de ${esc(h.name)}</h3>
-    <p class="meta">${miles(hTotal(h))} encuentros${
-      h.usePhases&&h.phases.length?` y ${h.phases.length} shiny de fase`:''}.
-    Pasa al registro con esa cifra.</p>
+    <p class="meta">${miles(hTotal(h))} encuentros. Pasa al registro con esa cifra.</p>
     <div class="otrow">
       ${r?`<button class="bigbtn on" data-hfin="mark|${h.id}">Guardar y marcar como conseguido</button>`:''}
       <button class="bigbtn" data-hfin="only|${h.id}">Solo guardar en el registro</button>
@@ -5014,9 +5034,8 @@ function huntCounter(h){
     <img loading="lazy" decoding="async" src="${huntSprite(h)}" alt=""
       onerror="this.style.visibility='hidden'">
     <div class="hmn"><b>${miles(h.count)}</b>
-      <span>${h.usePhases?'en esta fase':'encuentros'}</span></div>
+      <span>encuentros</span></div>
     <div class="hmx">
-      ${h.usePhases?`<span>Fase ${h.phase} · <b>${miles(n)}</b> en total</span>`:''}
       ${h.stats==='full'?`<span>${pct(hcum(e,n))} de probabilidad</span>`:''}
       ${h.check>0?`<span>comprobar en <b>${miles(Math.max(0,h.check-(h.sinceCheck||0)))}</b></span>`:''}
     </div></div>`;
@@ -5053,40 +5072,11 @@ function huntCounter(h){
     <button class="bigbtn on" id="hsetok" style="max-width:150px">Fijar</button>
     <button class="minibtn" data-hsetcancel="1">Cancelar</button></div>`;
   s+=`<div class="hacts">`;
-  if(h.usePhases) s+=`<button class="bigbtn" data-hphase="1">✦ Salió otro shiny (nueva fase)</button>`;
   s+=`<button class="bigbtn on" data-hend="${h.id}">✓ ¡Lo tengo! Cerrar la caza</button>
     <button class="minibtn" data-hdrop="${h.id}">Abandonar</button></div>`;
   if(endOpen===h.id) s+=cierreCaza(h);
-  if(h.usePhases && h.phases.length){
-    s+=`<div class="gsec"><h2>Fases de esta caza <span class="cnt">${h.phases.length}</span></h2>
-      <div class="hphl">`+h.phases.map((p,k)=>`<div class="hph">
-        <img loading="lazy" decoding="async" src="${p.spr}" alt="" onerror="this.style.visibility='hidden'">
-        <b>${esc(p.name)}</b><span>fase ${k+1} · ${miles(p.count)}</span></div>`).join('')+`</div></div>`;
-  }
   return s;
 }
-function phasePicker(h){
-  const q=huntQ.trim().toLowerCase();
-  let s=`<div class="gsec"><h2>¿Qué shiny ha salido?</h2>
-    <div class="meta">Se guarda como fase ${h.phase} con ${miles(h.count)} encuentros y el contador vuelve a cero.
-    El total de la caza no se pierde.</div>
-    <input type="search" id="huntq" class="lockinput" autocomplete="off"
-      placeholder="Buscar especie…" value="${esc(huntQ)}">`;
-  if(q.length>=2){
-    const keys=Object.keys(byDexAll).map(Number).filter(dx=>{
-      const b=baseEntry(dx); if(!b) return false;
-      return b.name.toLowerCase().includes(q)||String(dx).padStart(4,'0').startsWith(q)||String(dx)===q;
-    }).sort((a,b)=>a-b).slice(0,8);
-    s+='<div class="hpick">'+keys.map(dx=>{
-      const r=(byDexAll[dx]||[]).find(x=>x.shiny&&!x.form&&!x.fem)||(byDexAll[dx]||[]).find(x=>x.shiny);
-      return r?`<button class="hpc" data-hphasepick="${r.i}">
-        <img loading="lazy" decoding="async" src="${r.sprite}" alt="" onerror="this.style.visibility='hidden'">
-        <b>${esc(r.name)}</b></button>`:'';
-    }).join('')+'</div>';
-  }
-  return s+`<div class="otrow"><button class="minibtn" data-hphasecancel="1">Cancelar</button></div></div>`;
-}
-
 // ---- registro
 function huntLog(){
   const done=hunts.filter(h=>h.done);
@@ -5094,25 +5084,8 @@ function huntLog(){
     <div class="none">Todavía no has cerrado ninguna caza. Cuando termines una,
     aparecerá aquí con su recuento final, el juego y el método.</div></div>`;
 
-  // ---- resumen de todo, sin filtrar
-  const enc=done.reduce((a,h)=>a+hTotal(h),0);
-  const tTot=done.reduce((a,h)=>a+(h.tSum||0),0);
-  const aTot=done.reduce((a,h)=>a+hActs(h),0);
-  const orden=done.slice().sort((a,b)=>hTotal(a)-hTotal(b));
-  const best=orden[0], worst=orden[orden.length-1];
-  const med=(()=>{const l=orden.map(hTotal), m=l.length>>1;
-    return l.length%2?l[m]:Math.round((l[m-1]+l[m])/2);})();
-  let s=`<div class="gsec"><h2>Resumen</h2><div class="hsum">
-    <div><b>${done.length}</b><span>cazas cerradas</span></div>
-    <div><b>${miles(enc)}</b><span>encuentros</span></div>
-    <div><b>${miles(Math.round(enc/done.length))}</b><span>media por caza</span></div>
-    <div><b>${miles(med)}</b><span>mediana</span></div>
-    ${tTot?`<div><b>${dur(tTot)}</b><span>tiempo de caza</span></div>
-      <div><b>${miles(aTot)}</b><span>acciones en total</span></div>`:''}
-    <div><b>${miles(hTotal(best))}</b><span>la más rápida · ${esc(best.name)}</span></div>
-    <div><b>${miles(hTotal(worst))}</b><span>la más dura · ${esc(worst.name)}</span></div>
-  </div></div>`;
-
+  // el resumen vive en la pantalla de arriba; aquí sobra
+  let s='';
   // ---- filtros
   const juegos=GAMEORDER.filter(g=>done.some(h=>h.game===g));
   const metodos=[...new Set(done.map(h=>hMet(h)))].sort();
@@ -5183,8 +5156,6 @@ function logDetalle(h){
       ${h.step>1?`<div><b>${h.step}</b><span>apariciones por acción</span></div>`:''}
     </div>
     <div class="ldrow"><em class="lk lk-${luck.split(' ')[0]}">suerte ${luck}</em>
-      ${h.phases&&h.phases.length?`<span class="lcph">${h.phases.length} shiny de fase:
-        ${h.phases.map(p=>esc(p.name)).join(', ')}</span>`:''}
       <button class="minibtn danger" data-hdel="${h.id}">Borrar del registro</button></div>
     ${h.note?`<div class="lcnote">${esc(h.note)}</div>`:''}
   </div>`;
@@ -5197,14 +5168,13 @@ function renderHunt(){
   if(newHunt) return huntForm();
   const act=hunts.filter(x=>!x.done);
   const cur=openHunt?huntOf(openHunt):null;
-  if(cur && !cur.done) h += (phaseOpen===cur.id ? phasePicker(cur) : huntCounter(cur));
+  if(cur && !cur.done) h += huntCounter(cur);
   h+=`<div class="gsec"><h2>Cazas abiertas <span class="cnt">${act.length}</span></h2>`;
   if(!act.length) h+=`<div class="none">No tienes ninguna caza en marcha.</div>`;
   else h+='<div class="hlist">'+act.map(huntCard).join('')+'</div>';
   h+='</div>';
   return h;
 }
-let phaseOpen=null;
 let logSort='nuevas', logGame='todos', logMet='todos', logOpen=null;
 // a dónde llevar la vista tras el próximo render: al buscador o a la configuración
 let huntGo=null;
@@ -5321,12 +5291,12 @@ setInterval(()=>{
 // Cada pantalla deja una entrada en el historial, así que "atrás" retrocede
 // dentro de la app en vez de cerrarla. Solo cuenta lo que es navegar de verdad:
 // marcar un Pokémon o cambiar un filtro no crea entradas.
-const APPBUILD='2026-08-31 · 17';
+const APPBUILD='2026-08-31 · 19';
 let navSig=null;
 function navState(){
   return {v:opts.view, dex:selDex, pv:pokeView, ds:dexSrc, dsh:dexShiny?1:0,
     g:curGame, stab:setTab, htab:huntTab, oh:openHunt,
-    form:newHunt ? (newHunt.__edit?'e':'n') : null, ph:phaseOpen};
+    form:newHunt ? (newHunt.__edit?'e':'n') : null};
 }
 function navSync(yPrev){
   let st, sig;
@@ -5346,7 +5316,7 @@ function navSync(yPrev){
 }
 function applyNav(st){
   opts.view=st.v; selDex=st.dex; pokeView=st.pv; dexSrc=st.ds; dexShiny=!!st.dsh;
-  curGame=st.g; setTab=st.stab; huntTab=st.htab; openHunt=st.oh; phaseOpen=st.ph;
+  curGame=st.g; setTab=st.stab; huntTab=st.htab; openHunt=st.oh;
   setCntOpen=false; endOpen=null;
   if(!st.form) newHunt=null;
   else if(!newHunt || (newHunt.__edit?'e':'n')!==st.form){
@@ -5523,7 +5493,7 @@ app.addEventListener('click',e=>{
   // ---- Caza Shiny
   const htb=e.target.closest('[data-hunttab]');
   if(htb){ huntTab=htb.dataset.hunttab; localStorage.setItem(KEY+':hunttab',huntTab);
-    newHunt=null; endOpen=null; phaseOpen=null; setCntOpen=false; render(); window.scrollTo(0,0); return; }
+    newHunt=null; endOpen=null; setCntOpen=false; render(); window.scrollTo(0,0); return; }
   const hnw=e.target.closest('[data-hnew]');
   if(hnw){ newHunt=newHuntDraft(); huntQ=''; huntGo='pick'; render(); return; }
   // ---- filtros del registro
@@ -5574,8 +5544,6 @@ app.addEventListener('click',e=>{
     newHunt.charm=!newHunt.charm; render(); return; }
   const hst=e.target.closest('[data-hstats]');
   if(hst && newHunt){ newHunt.stats=hst.dataset.hstats; render(); return; }
-  const hph=e.target.closest('[data-hphases]');
-  if(hph && newHunt){ newHunt.usePhases=!newHunt.usePhases; render(); return; }
   const hk=e.target.closest('[data-hkeys]');
   if(hk && newHunt){ newHunt.keys=!newHunt.keys; render(); return; }
   const hv=e.target.closest('[data-hvibra]');
@@ -5595,8 +5563,8 @@ app.addEventListener('click',e=>{
       const t=huntOf(newHunt.id);
       if(t){ delete newHunt.__edit;
         // los contadores y las fases son del original, no del formulario
-        Object.assign(t, newHunt, {count:t.count, total:t.total, phase:t.phase,
-          phases:t.phases, sinceCheck:t.sinceCheck, start:t.start, done:t.done, end:t.end});
+        Object.assign(t, newHunt, {count:t.count, total:t.total,
+          sinceCheck:t.sinceCheck, start:t.start, done:t.done, end:t.end});
         openHunt=t.id;
       }
     } else { hunts.push(newHunt); openHunt=newHunt.id; }
@@ -5608,7 +5576,7 @@ app.addEventListener('click',e=>{
     return; }
   const hop=e.target.closest('[data-hopen]');
   if(hop){ const id=hop.dataset.hopen; openHunt = openHunt===id?null:id;
-    setCntOpen=false; endOpen=null; phaseOpen=null;
+    setCntOpen=false; endOpen=null;
     if(openHunt) huntGo='ctr';
     render(); return; }
   const had=e.target.closest('[data-hadd]');
@@ -5658,16 +5626,6 @@ app.addEventListener('click',e=>{
     if(h){ const d=v-h.count; h.count=v; h.total=Math.max(0,(h.total||0)+d);
       h.sinceCheck=Math.max(0,(h.sinceCheck||0)+d); saveHunts(); }
     setCntOpen=false; render(); return; }
-  const hpb=e.target.closest('[data-hphase]');
-  if(hpb){ phaseOpen=openHunt; huntQ=''; render(); return; }
-  const hpc=e.target.closest('[data-hphasecancel]');
-  if(hpc){ phaseOpen=null; huntQ=''; render(); return; }
-  const hpp=e.target.closest('[data-hphasepick]');
-  if(hpp){ const h=huntOf(openHunt), r=rows[+hpp.dataset.hphasepick];
-    if(h&&r){ (h.phases ||= []).push({name:r.name,dex:r.dex,spr:r.sprite,
-      count:h.count,date:new Date().toISOString()});
-      h.phase=(h.phase||1)+1; h.count=0; saveHunts(); }
-    phaseOpen=null; huntQ=''; render(); return; }
   const hen=e.target.closest('[data-hend]');
   if(hen){ endOpen=hen.dataset.hend; render(); return; }
   const hfi=e.target.closest('[data-hfin]');
@@ -5772,10 +5730,10 @@ document.getElementById('dexctl').addEventListener('click',e=>{
     huntTab='act'; localStorage.setItem(KEY+':hunttab','act'); render(); return; }
   const htb=e.target.closest('[data-hunttab]');
   if(htb){ huntTab=htb.dataset.hunttab; localStorage.setItem(KEY+':hunttab',huntTab);
-    newHunt=null; endOpen=null; phaseOpen=null; setCntOpen=false; render(); window.scrollTo(0,0); return; }
+    newHunt=null; endOpen=null; setCntOpen=false; render(); window.scrollTo(0,0); return; }
   const hop=e.target.closest('[data-hopen]');
   if(hop){ openHunt=hop.dataset.hopen;
-    setCntOpen=false; endOpen=null; phaseOpen=null; newHunt=null;
+    setCntOpen=false; endOpen=null; newHunt=null;
     huntGo='ctr'; window.scrollTo(0,0); render(); return; }
   const bk=e.target.closest('[data-back]');
   if(bk){ if(navSig!==null && history.state && history.state.nav) history.back();
