@@ -2849,9 +2849,12 @@ header.hunting .headcol{flex:1 1 100%;max-width:none}
   font-family:var(--mono);font-size:30px;font-weight:700;
   box-shadow:0 3px 0 #0f5f9e;user-select:none;-webkit-tap-highlight-color:transparent}
 .mbig:active{transform:translateY(3px);box-shadow:0 0 0 #0f5f9e}
-.mmin{flex:none;width:86px;cursor:pointer;border-radius:14px;font:inherit;font-family:var(--mono);
+.mmin{flex:none;width:72px;cursor:pointer;border-radius:14px;font:inherit;font-family:var(--mono);
   font-size:20px;color:#8a2b2b;background:#fff;border:2px solid var(--edge2)}
 .mmin:active{background:#ffeaea}
+.mfin{flex:none;width:60px;cursor:pointer;border-radius:14px;font:inherit;font-size:26px;
+  font-weight:700;color:#fff;background:#0d6b5c;border:2px solid #0a4f45}
+.mfin:active{background:#0f8a76}
 .motros{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0 4px}
 .motros .hcalc{flex:1 1 100%;padding:0;font-size:12.5px}
 .mbig.acuse{animation:acuseBtn .26s ease-out}
@@ -2884,6 +2887,42 @@ header.hunting .headcol{flex:1 1 100%;max-width:none}
 .hmn b.acuse,.hhcount b.acuse,.hcnum.acuse{animation:acuseNum .34s ease-out}
 @media (prefers-reduced-motion:reduce){
   .hbig.acuse,.hmn b.acuse,.hhcount b.acuse,.hcnum.acuse{animation:none}}
+
+/* ==========================================================================
+   Registro: resumen arriba, filtros, y fichas mínimas que se despliegan
+   ========================================================================== */
+.flab{font-size:11px;font-weight:700;color:#1d5a7d;text-transform:uppercase;
+  letter-spacing:.6px;margin:10px 0 5px}
+.fbar{display:flex;gap:6px;flex-wrap:wrap}
+.fseg{display:inline-flex;align-items:center;gap:5px;cursor:pointer;font:inherit;font-size:12.5px;
+  padding:6px 12px;border-radius:99px;border:1.5px solid var(--edge2);background:#fff;color:#1d5a7d}
+.fseg:hover{border-color:#1a7fd0}
+.fseg.on{background:#1a7fd0;border-color:#1a7fd0;color:#fff}
+.fseg .gi{width:15px;height:15px;flex:none}
+.fcount{font-size:12px;color:#5c8299;margin:12px 0 7px}
+.lgrid{display:grid;gap:7px;grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}
+.lmini{background:#fff;border:1.5px solid var(--edge2);border-radius:13px;overflow:hidden}
+.lmini.abierta{grid-column:1/-1;border-color:#1a7fd0;box-shadow:0 0 0 2px rgba(26,127,208,.14)}
+.lmbtn{display:flex;align-items:center;gap:9px;width:100%;cursor:pointer;font:inherit;
+  background:transparent;border:0;padding:7px 11px;text-align:left;color:var(--ink)}
+.lmbtn img{width:44px;height:44px;object-fit:contain;flex:none}
+.lmn{flex:1 1 auto;min-width:0;font-size:14px;color:#0d2331;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lmc{flex:none;font-family:var(--mono);font-size:17px;color:#1d5a7d;font-variant-numeric:tabular-nums}
+.ldet{padding:0 12px 12px;border-top:1.5px solid var(--edge2);margin-top:2px}
+.ldet .lcmeta{margin-top:7px}
+.ldstats{display:grid;gap:7px;margin-top:9px;
+  grid-template-columns:repeat(auto-fit,minmax(110px,1fr))}
+.ldstats>div{text-align:center;background:rgba(43,108,146,.07);border-radius:10px;padding:7px 5px}
+.ldstats b{display:block;font-family:var(--mono);font-size:19px;color:#0d2331;
+  font-variant-numeric:tabular-nums}
+.ldstats span{font-size:11.5px;color:#4a7086;line-height:1.3}
+.ldrow{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.ldrow .minibtn{margin-left:auto}
+.mratio{display:block;font-family:var(--mono);font-size:11.5px;color:#1d5a7d;margin:2px 0 3px}
+.chk.bloq{opacity:.55}
+.mobi .lgrid{grid-template-columns:1fr 1fr}
+.mobi .lmn{font-size:13px}
 </style>
 </head>
 <body>
@@ -4451,6 +4490,113 @@ let huntQ    = '';        // buscador de especie del formulario
 let setCntOpen = false;   // panel "fijar recuento"
 let endOpen  = null;      // id de la caza que está cerrándose
 
+/* =========================================================================
+   Métodos de caza por juego. Cada uno trae ya su probabilidad correcta:
+   base, tiradas propias del método, y cuántas suma el Amuleto Iris (0 = no
+   aplica en ese método, que es lo que pasa en más sitios de los que parece).
+   Datos contrastados con Bulbapedia, Serebii y los datamines de la comunidad.
+   ========================================================================= */
+const MJUEGO={
+ RBY:[
+  ['salvaje','Encuentro salvaje',8192,1,0,'1/8192 fijo. En Gen I el shiny depende de los DV, así que muchas especies no pueden serlo.'],
+  ['softreset','Soft reset',8192,1,0,'Legendarios, fósiles y regalos: reinicias hasta que salga.'],
+  ['pesca','Pesca',8192,1,0,'Cada pique cuenta uno.']],
+ CRYS:[
+  ['salvaje','Encuentro salvaje',8192,1,0,'1/8192 fijo.'],
+  ['softreset','Soft reset',8192,1,0,'Legendarios y regalos.'],
+  ['huevo','Cría de un padre shiny',64,1,0,'Criando con un progenitor shiny la probabilidad sube a ~1/64.'],
+  ['otro','Huevo Raro (Odd Egg)',7,1,0,'El huevo del Ayuntamiento de Ciudad Trigal sale shiny un 14 % de las veces.']],
+ RSE:[
+  ['salvaje','Encuentro salvaje',8192,1,0,'1/8192 fijo. Sin amuleto ni Masuda: no existen todavía.'],
+  ['softreset','Soft reset',8192,1,0,'La vía de los legendarios y los iniciales.'],
+  ['pesca','Pesca',8192,1,0,'Cada pique cuenta uno.']],
+ FRLG:[
+  ['salvaje','Encuentro salvaje',8192,1,0,'1/8192 fijo.'],
+  ['softreset','Soft reset',8192,1,0,'Iniciales, fósiles y legendarios.'],
+  ['pesca','Pesca',8192,1,0,'Cada pique cuenta uno.']],
+ DPPT:[
+  ['salvaje','Encuentro salvaje',8192,1,0,'1/8192. En cuarta generación no hay Amuleto Iris.'],
+  ['softreset','Soft reset',8192,1,0,'Legendarios e iniciales.'],
+  ['huevo','Método Masuda',8192,5,0,'Cruzando padres de idiomas distintos: 5 tiradas, 1/1638.'],
+  ['radar','Poké Radar (cadena 40)',200,1,0,'Con la cadena al máximo, 1/200 por mancha de hierba.']],
+ HGSS:[
+  ['salvaje','Encuentro salvaje',8192,1,0,'1/8192. Sin Amuleto Iris.'],
+  ['softreset','Soft reset',8192,1,0,'Legendarios e iniciales.'],
+  ['huevo','Método Masuda',8192,5,0,'5 tiradas, 1/1638. Aquí no hay Poké Radar.']],
+ BW:[
+  ['salvaje','Encuentro salvaje',8192,1,0,'1/8192. Blanco y Negro todavía no tienen Amuleto Iris.'],
+  ['softreset','Soft reset',8192,1,0,'Legendarios e iniciales.'],
+  ['huevo','Método Masuda',8192,6,0,'6 tiradas, 1/1365. Sin amuleto en esta entrega.'],
+  ['brote','Sacudida de arbustos / polvo',8192,1,0,'Los puntos que se agitan en el mapa.']],
+ B2W2:[
+  ['salvaje','Encuentro salvaje',8192,1,2,'1/8192, o 1/2731 con el Amuleto Iris, que llega en esta entrega.'],
+  ['softreset','Soft reset',8192,1,2,'Legendarios y regalos.'],
+  ['huevo','Método Masuda',8192,6,2,'6 tiradas, 1/1365. Con amuleto, 8 tiradas y 1/1024.'],
+  ['brote','Sacudida de arbustos / polvo',8192,1,2,'Los puntos que se agitan en el mapa.']],
+ XY:[
+  ['salvaje','Encuentro salvaje',4096,1,2,'La base pasa a 1/4096 en sexta generación.'],
+  ['softreset','Soft reset',4096,1,2,'Legendarios e iniciales.'],
+  ['huevo','Método Masuda',4096,6,2,'6 tiradas, 1/683. Con amuleto, 8 y 1/512.'],
+  ['radar','Poké Radar (cadena 40)',100,1,0,'Con la cadena al máximo, 1/100 por mancha.'],
+  ['pesca','Pesca en cadena (20+)',100,1,2,'Pescando sin fallar en el mismo punto, ~1/100.'],
+  ['otro','Safari Amigo (3 amigos)',512,1,0,'Con tres casillas del Safari, 1/512.']],
+ ORAS:[
+  ['salvaje','Encuentro salvaje',4096,1,2,'1/4096, o 1/1365 con el Amuleto Iris.'],
+  ['softreset','Soft reset',4096,1,2,'Legendarios e iniciales.'],
+  ['huevo','Método Masuda',4096,6,2,'6 tiradas, 1/683. Con amuleto, 1/512.'],
+  ['otro','Búsqueda con el BuscaDex',42,1,0,'Encadenando búsquedas del DexNav se llega hasta ~1/42.']],
+ SM:[
+  ['salvaje','Encuentro salvaje',4096,1,2,'1/4096, o 1/1365 con amuleto.'],
+  ['softreset','Soft reset',4096,1,2,'Legendarios y Ultraentes.'],
+  ['huevo','Método Masuda',4096,6,2,'6 tiradas, 1/683. Con amuleto, 1/512.'],
+  ['sos','Cadena SOS (11 a 20)',4096,5,2,'5 tiradas. Ojo: en Sol y Luna la cadena se desborda a los 255.'],
+  ['sos','Cadena SOS (21 a 30)',4096,9,2,'9 tiradas, 1/455. Con amuleto, 1/372.'],
+  ['sos','Cadena SOS (31 o más)',4096,13,2,'13 tiradas, 1/315. Con amuleto, 1/273. Es el tope.']],
+ USUL:[
+  ['salvaje','Encuentro salvaje',4096,1,2,'1/4096, o 1/1365 con amuleto.'],
+  ['softreset','Soft reset',4096,1,2,'Legendarios y Ultraentes.'],
+  ['huevo','Método Masuda',4096,6,2,'6 tiradas, 1/683. Con amuleto, 1/512.'],
+  ['sos','Cadena SOS (11 a 20)',4096,5,2,'5 tiradas. Aquí ya no se desborda la cadena.'],
+  ['sos','Cadena SOS (21 a 30)',4096,9,2,'9 tiradas, 1/455. Con amuleto, 1/372.'],
+  ['sos','Cadena SOS (31 o más)',4096,13,2,'13 tiradas, 1/315. Con amuleto, 1/273. Es el tope.'],
+  ['otro','Agujeros ultradimensionales',4096,1,2,'Para los legendarios cuenta la base. En los agujeros de más distancia y más anillos la probabilidad sube muchísimo: si volabas lejos, ajusta el denominador a mano.']],
+ LGPE:[
+  ['salvaje','Encuentro salvaje',4096,1,2,'Los Pokémon se ven en el mapa: basta con mirar.'],
+  ['softreset','Soft reset',4096,1,2,'Legendarios y regalos.'],
+  ['otro','Combo de capturas (31+) con cebo',4096,13,2,'Cadena al máximo más incienso: 1/273 con el amuleto.'],
+  ['otro','Combo de capturas (31 o más)',4096,11,2,'Solo la cadena, sin cebo.']],
+ SwSh:[
+  ['salvaje','Encuentro con destello (500+ debilitados)',4096,7,2,'Con el contador de especie al máximo: 7 tiradas, 1/585. Con amuleto, 1/455.'],
+  ['salvaje','Encuentro salvaje sin contador',4096,1,2,'Sin haber debilitado nada de esa especie.'],
+  ['huevo','Método Masuda',4096,6,2,'6 tiradas, 1/683. Con amuleto, 1/512.'],
+  ['incursion','Aventuras Dinamax (Max Lair)',300,1,2,'1/300 fija, y aquí el Amuleto Iris sí cuenta: 1/100.'],
+  ['softreset','Legendario del mapa (Espadas Justicieras)',4096,1,2,'Los que aparecen andando por el Tundra: el amuleto sí aplica.'],
+  ['softreset','Estático guionizado (Regis, Zacian…)',4096,1,0,'Los encuentros de guion NO usan el Amuleto Iris: se quedan en 1/4096.']],
+ BDSP:[
+  ['radar','Poké Radar (cadena 40)',99,1,0,'Con la cadena al máximo, 1/99. El amuleto no interviene.'],
+  ['huevo','Método Masuda',4096,6,2,'El único sitio donde el amuleto funciona en BDSP: 1/512.'],
+  ['salvaje','Encuentro salvaje',4096,1,0,'1/4096. Aquí el Amuleto Iris NO afecta a los salvajes.'],
+  ['softreset','Soft reset',4096,1,0,'Legendarios e iniciales. El amuleto tampoco cuenta.']],
+ PLA:[
+  ['salvaje','Encuentro salvaje',4096,1,3,'En Leyendas el Amuleto Iris suma 3 tiradas, no 2.'],
+  ['brote','Brote masivo',158,1,0,'Con la investigación completa de la especie: ~1/158.'],
+  ['brote','Brote masivo masivo',316,1,0,'Los brotes de las incursiones: ~1/316.'],
+  ['softreset','Soft reset',4096,1,3,'Legendarios y encuentros fijos.'],
+  ['otro','Distorsión espaciotemporal',4096,1,3,'Dentro de las distorsiones.']],
+ SV:[
+  ['brote','Brote masivo (60 debilitados) + Encuentro Poderoso',4096,6,2,'Lo máximo del juego: 6 tiradas, y 8 con amuleto, que da 1/512.'],
+  ['brote','Brote masivo (60 debilitados)',4096,3,2,'Tras debilitar 60 del brote.'],
+  ['brote','Brote masivo (30 debilitados)',4096,2,2,'Tras debilitar 30 del brote.'],
+  ['otro','Encuentro Poderoso Nv 3 (sándwich)',4096,4,2,'Solo el bocadillo, sin brote.'],
+  ['salvaje','Encuentro salvaje',4096,1,2,'Sin bonus.'],
+  ['huevo','Método Masuda',4096,6,2,'6 tiradas, 1/683. Con amuleto, 1/512.'],
+  ['incursion','Teraincursión',4096,1,2,'Las incursiones no llevan bonus propio.'],
+  ['softreset','Soft reset',4096,1,2,'Legendarios y encuentros fijos.']],
+ PLZA:[
+  ['salvaje','Encuentro salvaje',4096,1,3,'Como en Leyendas Arceus, el amuleto suma 3 tiradas.'],
+  ['otro','Encuentro Poderoso Nv 3',4096,4,3,'Del contenido descargable: 7 tiradas con amuleto, 1/585.'],
+  ['softreset','Soft reset',4096,1,3,'Encuentros fijos no bloqueados.']]
+};
 const HMETHOD=[
  ['salvaje','Encuentro salvaje','Hierba, cueva, superficie: cada Pokémon que aparece cuenta uno.'],
  ['softreset','Soft-reset','Legendarios, iniciales, regalos: reinicias hasta que salga.'],
@@ -4480,7 +4626,10 @@ const hcum = (h,n) => 1-Math.pow(1-hp(h), Math.max(0,n));
 const hNeed = (h,q) => Math.ceil(Math.log(1-q)/Math.log(1-hp(h)));
 const pct = x => (x*100).toFixed(x<0.01?2:1).replace('.',',')+' %';
 const miles = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g,'.');
-const hRows = h => h.rolls + (h.charm?2:0);
+const hRows = h => h.rolls + (h.charm ? (h.charmR==null?2:h.charmR) : 0);
+const hCharmOK = h => (h.charmR==null?2:h.charmR) > 0;
+// nombre del método: el del catálogo si lo hay, si no la etiqueta genérica
+const hMet = h => h.metNom || HMETLAB[h.method] || h.method;
 const hEff  = h => ({base:h.base, rolls:hRows(h), filt:h.filt});
 const hTotal = h => h.total||0;
 // medición del ritmo: intervalos entre pulsaciones, descartando pausas
@@ -4521,7 +4670,7 @@ function huntSprite(h){
 }
 function newHuntDraft(){
   return { id:'h'+Date.now(), i:null, kw:'', name:'', form:'', dex:0,
-    game:curGame, method:'salvaje', base:4096, rolls:1, charm:false, filt:100,
+    game:curGame, method:'salvaje', metNom:'', base:4096, rolls:1, charm:false, charmR:2, filt:100,
     step:1, check:0, sinceCheck:0, count:0, total:0, phase:1, phases:[],
     tSum:0, tN:0, tLast:0, tRec:[], acts:0, paused:false,
     stats:'full', usePhases:false, keys:false,
@@ -4623,7 +4772,7 @@ function huntHead(){
     <div class="hhmain">
       <div class="hhname">${esc(h.name)}${h.form?' · '+esc(h.form):''} ✦
         <button class="hedit" data-hedit="${h.id}" title="Editar los datos de esta caza">✎</button></div>
-      <div class="hhmeta">${gicon(h.game)}${GAMESHORT[h.game]||h.game} · ${HMETLAB[h.method]||h.method}
+      <div class="hhmeta">${gicon(h.game)}${GAMESHORT[h.game]||h.game} · ${hMet(h)}
         · desde ${fdate(h.start)}</div>
       <div class="hhcount"><b>${miles(h.count)}</b><span>${h.usePhases?'en esta fase':'encuentros'}</span></div>
       ${h.usePhases?`<div class="hhsub">Fase ${h.phase} · ${miles(n)} en total</div>`:''}
@@ -4638,7 +4787,7 @@ function huntCard(h){
   return `<button class="hcard${openHunt===h.id?' on':''}" data-hopen="${h.id}">
     <img src="${huntSprite(h)}" alt="" onerror="this.style.visibility='hidden'">
     <div class="hcinfo"><b>${esc(h.name)}${h.form?' · '+esc(h.form):''}</b>
-      <span>${GAMESHORT[h.game]||h.game} · ${HMETLAB[h.method]||h.method}</span></div>
+      <span>${GAMESHORT[h.game]||h.game} · ${hMet(h)}</span></div>
     <div class="hcnum">${miles(n)}</div>
     <i class="hcedit" data-hedit="${h.id}" title="Editar los datos de esta caza">✎</i></button>`;
 }
@@ -4649,7 +4798,7 @@ function logCard(h){
     <img src="${huntSprite(h)}" alt="" onerror="this.style.visibility='hidden'">
     <div class="lcinfo">
       <b>${esc(h.name)}${h.form?' · '+esc(h.form):''} ✦</b>
-      <span class="lcmeta">${gicon(h.game)}${GAMESHORT[h.game]||h.game} · ${HMETLAB[h.method]||h.method}</span>
+      <span class="lcmeta">${gicon(h.game)}${GAMESHORT[h.game]||h.game} · ${hMet(h)}</span>
       ${h.start&&h.end?`<span class="lcmeta">${fdate(h.start)} → ${fdate(h.end)} ·
         ${hDays(h)} día${hDays(h)>1?'s':''}</span>`:''}
       ${h.phases&&h.phases.length?`<span class="lcph">${h.phases.length} shiny de fase:
@@ -4710,21 +4859,33 @@ function huntForm(){
       `<button class="gbtn${d.game===g?' on':''}${gs.includes(g)?'':' dim'}" data-hgame="${g}"
         title="${GAMEFULL[g]}">${gicon(g)}${GAMESHORT[g]}</button>`).join('')+`</div></div>`;
 
-  h+=`<div class="gsec"><h2>Método</h2><div class="optgrid">`+HMETHOD.map(([k,n,t])=>
-    `<button class="optcard${d.method===k?' on':''}" data-hmethod="${k}"><b>${n}</b><span>${t}</span></button>`
-    ).join('')+`</div></div>`;
+  // los métodos son los que existen en ESE juego, con su probabilidad ya puesta
+  const mets = MJUEGO[d.game] || [];
+  h+=`<div class="gsec"><h2>Método</h2>
+    <div class="meta">Solo salen los que existen en ${GAMESHORT[d.game]||d.game}, con su
+    probabilidad ya calculada. Al elegir uno se rellenan los números de abajo.</div>
+    <div class="optgrid">`+mets.map(([k,n,base,rolls,cr,t],i)=>{
+      const sel = d.metNom===n;
+      const sinA = 1-Math.pow(1-1/base, rolls);
+      const conA = cr ? 1-Math.pow(1-1/base, rolls+cr) : null;
+      return `<button class="optcard${sel?' on':''}" data-hmet="${i}"><b>${n}</b>
+        <span class="mratio">1/${miles(Math.round(1/sinA))}${
+          conA?` · con amuleto 1/${miles(Math.round(1/conA))}`:' · el amuleto no cuenta aquí'}</span>
+        <span>${t}</span></button>`;
+    }).join('')+(mets.length?'':'<div class="none">Sin métodos catalogados para este juego.</div>')+
+    `</div></div>`;
 
-  h+=`<div class="gsec"><h2>Probabilidad base</h2>
-    <div class="meta">La probabilidad sin bonus del método. Las tiradas extra van aparte.</div>
-    <div class="optgrid">`+HBASE.map(([b,t])=>
-      `<button class="optcard sm${(b?d.base===b:![8192,4096,1365,512,100,64].includes(d.base))?' on':''}"
-        data-hbase="${b}"><b>${b?'1/'+miles(b):'Otra'}</b><span>${t}</span></button>`).join('')+
-    `</div>
+  const charmOK = hCharmOK(d);
+  h+=`<div class="gsec"><h2>Ajuste manual de la probabilidad</h2>
+    <div class="meta">Normalmente no hace falta tocar nada: lo rellena el método.
+    Cámbialo solo si tu caso concreto se sale de la tabla.</div>
     <div class="hfields"><label class="hlab">Denominador
       <input type="number" id="hbaseN" class="lockinput" min="2" max="100000" value="${d.base}"></label>
       <label class="hlab">Tiradas
       <input type="number" id="hrolls" class="lockinput" min="1" max="99" value="${d.rolls}"></label>
-      <button class="chk${d.charm?' on':''}" data-hcharm="1"><i></i>Amuleto Iris (+2 tiradas)</button>
+      <button class="chk${d.charm&&charmOK?' on':''}${charmOK?'':' bloq'}" data-hcharm="1"><i></i>${
+        charmOK?`Amuleto Iris (+${d.charmR==null?2:d.charmR} tiradas)`
+               :'El Amuleto Iris no cuenta en este método'}</button>
       <span class="hcalc">Shiny por aparición: <b>1/${miles(Math.round(1/hpRaw(hEff(d))))}</b></span></div></div>`;
 
   h+=`<div class="gsec"><h2>¿Te vale cualquier ejemplar que aparezca?</h2>
@@ -4794,6 +4955,7 @@ function panelMini(h, principal){
     <div class="mbtns">
       <button class="mbig" data-haddm="${h.id}|${h.step}">+${h.step}</button>
       <button class="mmin" data-haddm="${h.id}|-${h.step}">−${h.step}</button>
+      <button class="mfin" data-hend="${h.id}" title="Lo tengo, cerrar esta caza">✓</button>
     </div>
   </div>`;
 }
@@ -4806,7 +4968,23 @@ function multiCounter(h){
     <span class="hcalc">Con varias cazas a la vez se ocultan las estadísticas;
       cada una guarda su recuento y su ritmo por separado.</span></div>`;
   if(multiPick) s+=multiPicker();
+  if(endOpen){
+    const t=huntOf(endOpen);
+    if(t) s+=cierreCaza(t);
+  }
   return s;
+}
+// panel de cierre, compartido por el modo simple y el múltiple
+function cierreCaza(h){
+  const r=rowOfHunt(h);
+  return `<div class="hend"><h3>Cerrar la caza de ${esc(h.name)}</h3>
+    <p class="meta">${miles(hTotal(h))} encuentros${
+      h.usePhases&&h.phases.length?` y ${h.phases.length} shiny de fase`:''}.
+    Pasa al registro con esa cifra.</p>
+    <div class="otrow">
+      ${r?`<button class="bigbtn on" data-hfin="mark|${h.id}">Guardar y marcar como conseguido</button>`:''}
+      <button class="bigbtn" data-hfin="only|${h.id}">Solo guardar en el registro</button>
+      <button class="minibtn" data-hfin="cancel|${h.id}">Cancelar</button></div></div>`;
 }
 function multiPicker(){
   const libres=hunts.filter(x=>!x.done && x.id!==openHunt && !multi.includes(x.id));
@@ -4818,7 +4996,7 @@ function multiPicker(){
       <img loading="lazy" decoding="async" src="${huntSprite(x)}" alt=""
         onerror="this.style.visibility='hidden'">
       <div class="hcinfo"><b>${esc(x.name)}${x.form?' · '+esc(x.form):''}</b>
-        <span>${GAMESHORT[x.game]||x.game} · ${HMETLAB[x.method]||x.method}</span></div>
+        <span>${GAMESHORT[x.game]||x.game} · ${hMet(x)}</span></div>
       <div class="hcnum">${miles(hTotal(x))}</div></button>`).join('')+'</div>';
   s+=`<div class="otrow"><button class="minibtn" data-hmulticancel="1">Cancelar</button></div></div>`;
   return s;
@@ -4878,16 +5056,7 @@ function huntCounter(h){
   if(h.usePhases) s+=`<button class="bigbtn" data-hphase="1">✦ Salió otro shiny (nueva fase)</button>`;
   s+=`<button class="bigbtn on" data-hend="${h.id}">✓ ¡Lo tengo! Cerrar la caza</button>
     <button class="minibtn" data-hdrop="${h.id}">Abandonar</button></div>`;
-  if(endOpen===h.id){
-    const r=rowOfHunt(h);
-    s+=`<div class="hend"><h3>Cerrar la caza de ${esc(h.name)}</h3>
-      <p class="meta">${miles(hTotal(h))} encuentros${h.usePhases&&h.phases.length?` y ${h.phases.length} shiny de fase`:''}.
-      Pasa al registro con esa cifra.</p>
-      <div class="otrow">
-        ${r?`<button class="bigbtn on" data-hfin="mark|${h.id}">Guardar y marcar como conseguido</button>`:''}
-        <button class="bigbtn" data-hfin="only|${h.id}">Solo guardar en el registro</button>
-        <button class="minibtn" data-hfin="cancel|${h.id}">Cancelar</button></div></div>`;
-  }
+  if(endOpen===h.id) s+=cierreCaza(h);
   if(h.usePhases && h.phases.length){
     s+=`<div class="gsec"><h2>Fases de esta caza <span class="cnt">${h.phases.length}</span></h2>
       <div class="hphl">`+h.phases.map((p,k)=>`<div class="hph">
@@ -4920,25 +5089,20 @@ function phasePicker(h){
 
 // ---- registro
 function huntLog(){
-  const done=hunts.filter(h=>h.done).sort((a,b)=>{
-    // las cazas importadas no traen fecha: van detrás, en el orden del archivo
-    const ta=a.end?new Date(a.end).getTime():-1, tb=b.end?new Date(b.end).getTime():-1;
-    return tb-ta;});
-  let s='';
+  const done=hunts.filter(h=>h.done);
   if(!done.length) return `<div class="gsec"><h2>Registro de cazas</h2>
     <div class="none">Todavía no has cerrado ninguna caza. Cuando termines una,
     aparecerá aquí con su recuento final, el juego y el método.</div></div>`;
+
+  // ---- resumen de todo, sin filtrar
   const enc=done.reduce((a,h)=>a+hTotal(h),0);
-  const byGame={}, byMet={};
-  done.forEach(h=>{ (byGame[h.game] ||= [0,0]); byGame[h.game][0]++; byGame[h.game][1]+=hTotal(h);
-                    (byMet[h.method] ||= [0,0]); byMet[h.method][0]++; byMet[h.method][1]+=hTotal(h); });
-  const sorted=done.slice().sort((a,b)=>hTotal(a)-hTotal(b));
-  const best=sorted[0], worst=sorted[sorted.length-1];
-  const med=(()=>{const l=sorted.map(hTotal); const m=l.length>>1;
-    return l.length%2?l[m]:Math.round((l[m-1]+l[m])/2);})();
   const tTot=done.reduce((a,h)=>a+(h.tSum||0),0);
   const aTot=done.reduce((a,h)=>a+hActs(h),0);
-  s+=`<div class="gsec"><h2>Resumen</h2><div class="hsum">
+  const orden=done.slice().sort((a,b)=>hTotal(a)-hTotal(b));
+  const best=orden[0], worst=orden[orden.length-1];
+  const med=(()=>{const l=orden.map(hTotal), m=l.length>>1;
+    return l.length%2?l[m]:Math.round((l[m-1]+l[m])/2);})();
+  let s=`<div class="gsec"><h2>Resumen</h2><div class="hsum">
     <div><b>${done.length}</b><span>cazas cerradas</span></div>
     <div><b>${miles(enc)}</b><span>encuentros</span></div>
     <div><b>${miles(Math.round(enc/done.length))}</b><span>media por caza</span></div>
@@ -4948,17 +5112,82 @@ function huntLog(){
     <div><b>${miles(hTotal(best))}</b><span>la más rápida · ${esc(best.name)}</span></div>
     <div><b>${miles(hTotal(worst))}</b><span>la más dura · ${esc(worst.name)}</span></div>
   </div></div>`;
-  s+=`<div class="gsec"><h2>Por juego</h2><div class="hbreak">`+
-    GAMEORDER.filter(g=>byGame[g]).map(g=>`<div class="hbk">${gicon(g)}
-      <b>${GAMESHORT[g]||g}</b><span>${byGame[g][0]} caza${byGame[g][0]>1?'s':''} ·
-      ${miles(byGame[g][1])} encuentros</span></div>`).join('')+`</div></div>`;
-  s+=`<div class="gsec"><h2>Por método</h2><div class="hbreak">`+
-    HMETHOD.filter(m=>byMet[m[0]]).map(m=>`<div class="hbk">
-      <b>${m[1]}</b><span>${byMet[m[0]][0]} caza${byMet[m[0]][0]>1?'s':''} ·
-      ${miles(byMet[m[0]][1])} encuentros</span></div>`).join('')+`</div></div>`;
-  s+=`<div class="gsec"><h2>Cazas cerradas <span class="cnt">${done.length}</span></h2>`+
-    done.map(logCard).join('')+`</div>`;
-  return s;
+
+  // ---- filtros
+  const juegos=GAMEORDER.filter(g=>done.some(h=>h.game===g));
+  const metodos=[...new Set(done.map(h=>hMet(h)))].sort();
+  const seg=(attr,val,txt,cur)=>
+    `<button class="fseg${cur===val?' on':''}" data-${attr}="${val}">${txt}</button>`;
+  s+=`<div class="gsec"><h2>Cazas cerradas <span class="cnt">${done.length}</span></h2>
+    <div class="flab">Ordenar</div><div class="fbar">`+
+    seg('logsort','nuevas','Más recientes',logSort)+
+    seg('logsort','resets-','Menos resets',logSort)+
+    seg('logsort','resets+','Más resets',logSort)+
+    seg('logsort','tiempo-','Más rápidas',logSort)+
+    seg('logsort','tiempo+','Más largas',logSort)+
+    `</div>
+    <div class="flab">Juego</div><div class="fbar">`+
+    seg('loggame','todos','Todos',logGame)+
+    juegos.map(g=>`<button class="fseg${logGame===g?' on':''}" data-loggame="${g}">
+      ${gicon(g)}${GAMESHORT[g]||g}</button>`).join('')+
+    `</div>
+    <div class="flab">Método</div><div class="fbar">`+
+    seg('logmet','todos','Todos',logMet)+
+    metodos.map(m=>seg('logmet',m,esc(m),logMet)).join('')+
+    `</div>`;
+
+  // ---- lista filtrada y ordenada
+  let l=done.filter(h=>(logGame==='todos'||h.game===logGame)
+                    && (logMet==='todos'||hMet(h)===logMet));
+  const fin=h=>h.end?new Date(h.end).getTime():-1;
+  l.sort((a,b)=>{
+    if(logSort==='resets-') return hTotal(a)-hTotal(b);
+    if(logSort==='resets+') return hTotal(b)-hTotal(a);
+    if(logSort==='tiempo-') return (a.tSum||Infinity)-(b.tSum||Infinity);
+    if(logSort==='tiempo+') return (b.tSum||-1)-(a.tSum||-1);
+    return fin(b)-fin(a);
+  });
+  s+=`<div class="fcount">${l.length} de ${done.length}</div>`;
+  if(!l.length) s+='<div class="none">Ningún resultado con esos filtros.</div>';
+  else s+='<div class="lgrid">'+l.map(h=>{
+    const abierta=logOpen===h.id;
+    return `<div class="lmini${abierta?' abierta':''}">
+      <button class="lmbtn" data-logopen="${h.id}">
+        <img loading="lazy" decoding="async" src="${huntSprite(h)}" alt=""
+          onerror="this.style.visibility='hidden'">
+        <span class="lmn">${esc(h.name)}${h.form?' · '+esc(h.form):''}</span>
+        <span class="lmc">${miles(hTotal(h))}</span>
+      </button>${abierta?logDetalle(h):''}</div>`;
+  }).join('')+'</div>';
+  return s+'</div>';
+}
+
+// ---- ficha desplegada de una caza del registro
+function logDetalle(h){
+  const n=hTotal(h), e=hEff(h), mean=Math.round(1/hp(e));
+  const luck = n<=mean*0.5?'muy buena': n<=mean?'buena': n<=mean*2?'normal':'dura';
+  return `<div class="ldet">
+    <div class="lcmeta">${gicon(h.game)}${GAMESHORT[h.game]||h.game} · ${hMet(h)}</div>
+    ${h.start&&h.end?`<div class="lcmeta">${fdate(h.start)} → ${fdate(h.end)} ·
+      ${hDays(h)} día${hDays(h)>1?'s':''}</div>`:''}
+    <div class="lcmeta">1/${miles(Math.round(1/hp(e)))} por aparición${
+      h.charm?' · con Amuleto Iris':''}${
+      hFilt(h)<100?` · solo te valía el ${String(hFilt(h)).replace('.',',')} %`:''}</div>
+    <div class="ldstats">
+      <div><b>${miles(n)}</b><span>encuentros</span></div>
+      <div><b>${miles(mean)}</b><span>media esperada</span></div>
+      ${(h.tN||0)>=3?`
+        <div><b>${miles(hActs(h))}</b><span>${h.step>1?'acciones':'resets'}</span></div>
+        <div><b>${durPace(tPace(h))}</b><span>por ${h.step>1?'acción':'reset'}</span></div>
+        <div><b>${dur(h.tSum)}</b><span>tiempo ${h.est?'estimado':'cronometrado'}</span></div>`:''}
+      ${h.step>1?`<div><b>${h.step}</b><span>apariciones por acción</span></div>`:''}
+    </div>
+    <div class="ldrow"><em class="lk lk-${luck.split(' ')[0]}">suerte ${luck}</em>
+      ${h.phases&&h.phases.length?`<span class="lcph">${h.phases.length} shiny de fase:
+        ${h.phases.map(p=>esc(p.name)).join(', ')}</span>`:''}
+      <button class="minibtn danger" data-hdel="${h.id}">Borrar del registro</button></div>
+    ${h.note?`<div class="lcnote">${esc(h.note)}</div>`:''}
+  </div>`;
 }
 
 function renderHunt(){
@@ -4976,6 +5205,7 @@ function renderHunt(){
   return h;
 }
 let phaseOpen=null;
+let logSort='nuevas', logGame='todos', logMet='todos', logOpen=null;
 // a dónde llevar la vista tras el próximo render: al buscador o a la configuración
 let huntGo=null;
 function huntScroll(){
@@ -5053,8 +5283,16 @@ function huntAdd(h,n){
 function huntFinish(h,mark){
   h.done=true; h.end=new Date().toISOString();
   if(mark){ const r=rowOfHunt(h); if(r) state[idOf(r)]='ionix', save(); }
-  endOpen=null; openHunt=null; saveHunts(); huntTab='log';
-  localStorage.setItem(KEY+':hunttab',huntTab); render();
+  endOpen=null;
+  multi=multi.filter(x=>x!==h.id); saveMulti();
+  if(openHunt===h.id){
+    // en modo múltiple seguimos con las demás en vez de salir al registro
+    const resto=multi.length ? huntOf(multi[0]) : null;
+    if(resto){ openHunt=resto.id; multi=multi.filter(x=>x!==resto.id); saveMulti(); saveHunts(); render(); return; }
+    openHunt=null;
+    huntTab='log'; localStorage.setItem(KEY+':hunttab',huntTab);
+  }
+  saveHunts(); render();
 }
 
 function headHeight(){
@@ -5083,7 +5321,7 @@ setInterval(()=>{
 // Cada pantalla deja una entrada en el historial, así que "atrás" retrocede
 // dentro de la app en vez de cerrarla. Solo cuenta lo que es navegar de verdad:
 // marcar un Pokémon o cambiar un filtro no crea entradas.
-const APPBUILD='2026-08-30 · 16';
+const APPBUILD='2026-08-31 · 17';
 let navSig=null;
 function navState(){
   return {v:opts.view, dex:selDex, pv:pokeView, ds:dexSrc, dsh:dexShiny?1:0,
@@ -5288,6 +5526,15 @@ app.addEventListener('click',e=>{
     newHunt=null; endOpen=null; phaseOpen=null; setCntOpen=false; render(); window.scrollTo(0,0); return; }
   const hnw=e.target.closest('[data-hnew]');
   if(hnw){ newHunt=newHuntDraft(); huntQ=''; huntGo='pick'; render(); return; }
+  // ---- filtros del registro
+  const lso=e.target.closest('[data-logsort]');
+  if(lso){ logSort=lso.dataset.logsort; render(); return; }
+  const lga=e.target.closest('[data-loggame]');
+  if(lga){ logGame=lga.dataset.loggame; render(); return; }
+  const lme=e.target.closest('[data-logmet]');
+  if(lme){ logMet=lme.dataset.logmet; render(); return; }
+  const lop=e.target.closest('[data-logopen]');
+  if(lop){ const id=lop.dataset.logopen; logOpen = logOpen===id?null:id; render(); return; }
   const hcn=e.target.closest('[data-hcancel]');
   if(hcn){ newHunt=null; huntQ=''; render(); return; }
   const htg=e.target.closest('[data-htarget]');
@@ -5299,13 +5546,32 @@ app.addEventListener('click',e=>{
   const hcl=e.target.closest('[data-hclear]');
   if(hcl && newHunt){ newHunt.kw=''; newHunt.i=null; huntQ=''; huntGo='pick'; render(); return; }
   const hg=e.target.closest('[data-hgame]');
-  if(hg && newHunt){ newHunt.game=hg.dataset.hgame; render(); return; }
-  const hm=e.target.closest('[data-hmethod]');
-  if(hm && newHunt){ newHunt.method=hm.dataset.hmethod; render(); return; }
+  if(hg && newHunt){
+    newHunt.game=hg.dataset.hgame;
+    // el método elegido puede no existir en el juego nuevo: lo reseteamos
+    const lista=MJUEGO[newHunt.game]||[];
+    if(!lista.some(m=>m[1]===newHunt.metNom)){
+      const pri=lista[0];
+      if(pri){ newHunt.method=pri[0]; newHunt.metNom=pri[1];
+        newHunt.base=pri[2]; newHunt.rolls=pri[3]; newHunt.charmR=pri[4];
+        if(!pri[4]) newHunt.charm=false; }
+      else newHunt.metNom='';
+    }
+    render(); return; }
+  const hm=e.target.closest('[data-hmet]');
+  if(hm && newHunt){
+    const m=(MJUEGO[newHunt.game]||[])[+hm.dataset.hmet];
+    if(m){ newHunt.method=m[0]; newHunt.metNom=m[1];
+      newHunt.base=m[2]; newHunt.rolls=m[3]; newHunt.charmR=m[4];
+      if(!m[4]) newHunt.charm=false; }
+    render(); return; }
   const hb=e.target.closest('[data-hbase]');
   if(hb && newHunt){ const v=+hb.dataset.hbase; if(v) newHunt.base=v; render(); return; }
   const hch=e.target.closest('[data-hcharm]');
-  if(hch && newHunt){ newHunt.charm=!newHunt.charm; render(); return; }
+  if(hch && newHunt){
+    if(!hCharmOK(newHunt)) return alert('En este método el Amuleto Iris no influye, '+
+      'así que activarlo daría una probabilidad falsa.');
+    newHunt.charm=!newHunt.charm; render(); return; }
   const hst=e.target.closest('[data-hstats]');
   if(hst && newHunt){ newHunt.stats=hst.dataset.hstats; render(); return; }
   const hph=e.target.closest('[data-hphases]');
